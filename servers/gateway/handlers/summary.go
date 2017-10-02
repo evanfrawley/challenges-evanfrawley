@@ -42,27 +42,6 @@ type PageSummary struct {
 //a JSON-encoded PageSummary struct containing the page summary
 //meta-data.
 func SummaryHandler(w http.ResponseWriter, r *http.Request) {
-    /*TODO: add code and additional functions to do the following:
-    - Add an HTTP header to the response with the name
-     `Access-Control-Allow-Origin` and a value of `*`. This will
-      allow cross-origin AJAX requests to your server.
-    - Get the `url` query string parameter value from the request.
-      If not supplied, respond with an http.StatusBadRequest error.
-    - Call fetchHTML() to fetch the requested URL. See comments in that
-      function for more details.
-    - Call extractSummary() to extract the page summary meta-data,
-      as directed in the assignment. See comments in that function
-      for more details
-    - Close the response HTML stream so that you don't leak resources.
-    - Finally, respond with a JSON-encoded version of the PageSummary
-      struct. That way the client can easily parse the JSON back into
-      an object
-
-    Helpful Links:
-    https://golang.org/pkg/net/http/#Request.FormValue
-    https://golang.org/pkg/net/http/#Error
-    https://golang.org/pkg/encoding/json/#NewEncoder
-    */
     w.Header().Add("Access-Control-Allow-Origin", "*")
     w.Header().Add("Content-Type", "application/json")
 
@@ -72,12 +51,14 @@ func SummaryHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         log.Fatalf("some error occurred when fetching HTML: %s", err)
     }
+
     pageSummary, err := extractSummary(URL, reader)
     if err != nil {
         log.Fatalf("some error occurred when extracting HTML: %s", err)
     }
+
     reader.Close()
-    // TODO get the query param for the `url`
+
     json.NewEncoder(w).Encode(pageSummary)
 }
 
@@ -85,37 +66,20 @@ func SummaryHandler(w http.ResponseWriter, r *http.Request) {
 //Errors are returned if the response status code is an error (>=400),
 //or if the content type indicates the URL is not an HTML page.
 func fetchHTML(pageURL string) (io.ReadCloser, error) {
-    /*TODO: Do an HTTP GET for the page URL. If the response status
-    code is >= 400, return a nil stream and an error. If the response
-    content type does not indicate that the content is a web page, return
-    a nil stream and an error. Otherwise return the response body and
-    no (nil) error.
-
-    To test your implementation of this function, run the TestFetchHTML
-    test in summary_test.go. You can do that directly in Visual Studio Code,
-    or at the command line by running:
-        go test -run TestFetchHTML
-
-    Helpful Links:
-    https://golang.org/pkg/net/http/#Get
-    */
     resp, err := http.Get(pageURL)
 
     //if there was an error, report it and exit
     if err != nil {
-        //.Fatalf() prints the error and exits the process
         return nil, fmt.Errorf("error fetching URL: %v\n", err)
     }
 
-    //check response status code
     if resp.StatusCode != http.StatusOK {
         return nil, fmt.Errorf("response status code was %d \n", resp.StatusCode)
     }
 
-    //check response content type
-    ctype := resp.Header.Get("Content-Type")
-    if !strings.HasPrefix(ctype, "text/html") {
-        return nil, fmt.Errorf("response content type was %s not text/html\n", ctype)
+    contentType := resp.Header.Get("Content-Type")
+    if !strings.HasPrefix(contentType, "text/html") {
+        return nil, fmt.Errorf("response content type was %s not text/html\n", contentType)
     }
 
     return resp.Body, nil
@@ -124,31 +88,13 @@ func fetchHTML(pageURL string) (io.ReadCloser, error) {
 //extractSummary tokenizes the `htmlStream` and populates a PageSummary
 //struct with the page's summary meta-data.
 func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, error) {
-    /*TODO: tokenize the `htmlStream` and extract the page summary meta-data
-    according to the assignment description.
-
-    To test your implementation of this function, run the TestExtractSummary
-    test in summary_test.go. You can do that directly in Visual Studio Code,
-    or at the command line by running:
-        go test -run TestExtractSummary
-
-    Helpful Links:
-    https://drstearns.github.io/tutorials/tokenizing/
-    http://ogp.me/
-    https://developers.facebook.com/docs/reference/opengraph/
-    https://golang.org/pkg/net/url/#URL.ResolveReference
-    */
-    //create a new tokenizer over the response body
     tokenizer := html.NewTokenizer(htmlStream)
-    //loop until we find the title element and its content
-    //or encounter an error (which includes the end of the stream)
+
     pageSummary := &PageSummary{}
     tempPreviewImage := &PreviewImage{}
     for {
         nextTokenType := tokenizer.Next()
 
-        //if it's an error token, we either reached
-        //the end of the file, or the HTML was malformed
         if nextTokenType == html.ErrorToken {
             log.Printf("error tokenizing HTML: %v \n", tokenizer.Err())
             break
@@ -156,7 +102,6 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
 
         nextToken := tokenizer.Token()
 
-        //break out if we're done with the <head></head>
         if nextTokenType == html.EndTagToken && "head" == nextToken.Data {
             break
         }
@@ -208,9 +153,8 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
                 handleMetaTagData(pageSummary, metaIDType, metaIDTypeVal, content)
             }
         }
-        case "title":
+        case "title": {
             if nextToken.Type == html.StartTagToken {
-                tokenizer.NextIsNotRawText()
                 tokenizer.Next()
                 titleToken := tokenizer.Token()
                 if titleToken.Type == html.TextToken {
@@ -219,6 +163,7 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
                     }
                 }
             }
+        }
         default: // Do nothing!
         }
     }
@@ -227,7 +172,7 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
 }
 
 
-func handleMetaTagData(pageSummary *PageSummary, tagType, tagValue, content string)() {
+func handleMetaTagData(pageSummary *PageSummary, tagType, tagValue, content string) {
     switch tagType {
     case "name":
         switch tagValue {
@@ -259,7 +204,7 @@ func handleMetaTagData(pageSummary *PageSummary, tagType, tagValue, content stri
     }
 }
 
-func handlePreviewImageData(image *PreviewImage, imageAttribute, content string)() {
+func handlePreviewImageData(image *PreviewImage, imageAttribute, content string) {
     switch imageAttribute {
     case "og:image:secure_url": {
         image.SecureURL = content
@@ -291,7 +236,6 @@ func handlePreviewImageData(image *PreviewImage, imageAttribute, content string)
 func getMetaIDTypeVal(attributes []html.Attribute) (string) {
     name := findAndGetValueForAttribute(attributes, "name")
     property := findAndGetValueForAttribute(attributes, "property")
-
     if property != "" {
         return property
     } else {
@@ -306,6 +250,7 @@ func getMetaIDType(attributes []html.Attribute) (string) {
             metaIDType = element.Key
         }
     }
+
     return metaIDType
 }
 
@@ -320,6 +265,7 @@ func findAndGetValueForAttribute(attributes []html.Attribute, targetAttribute st
             metaIDType = element.Val
         }
     }
+
     return metaIDType
 }
 
@@ -348,7 +294,7 @@ func getAbsoluteURL(parentURL, relativeUrl string) (string) {
     httpsPrefix := "^https?://*"
     matched, err := regexp.MatchString(httpsPrefix, relativeUrl)
     if err != nil {
-        log.Printf("regex was incorrect: %s", httpsPrefix)
+        log.Printf("regex was syntactically incorrect: %s", httpsPrefix)
     }
 
     returnURL := ""
@@ -386,7 +332,7 @@ func getAbsoluteURL(parentURL, relativeUrl string) (string) {
         // split host and resources
         urlPieces := strings.Split(protocolAndRestOfLink[1], "/")
 
-        // select only necessary resource paths, traversing up directories if the page provided was relative with `../`
+        // select only necessary resource paths, traversing up directories if the page provided was relative with `../` `./` `/`
         relativePathUrlPieces := urlPieces[:len(urlPieces) - relativeDirBackCount]
 
         // append sanitized relative path
@@ -403,5 +349,6 @@ func getAbsoluteURL(parentURL, relativeUrl string) (string) {
 
         returnURL = finalAbsoluteURL
     }
+
     return returnURL
 }

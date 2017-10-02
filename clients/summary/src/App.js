@@ -9,7 +9,7 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            summary: "will be title",
+            summary: { data: 'empty' },
         }
     }
 
@@ -20,7 +20,6 @@ class App extends Component {
         e.preventDefault();
         console.log('event target', e.target.url.value);
         GoApiService.getSummaryResourcePromise(e.target.url.value).then((json) => {
-            console.log(json);
             this.setState({summary: json})
         })
     }
