@@ -29,7 +29,6 @@ func main() {
 
     mux.HandleFunc("/v1/summary", handlers.SummaryHandler)
 
-    fmt.Printf("server is listening at http://%s", localAddr)
-    fmt.Println()
+    fmt.Printf("server is listening at http://%s \n", localAddr)
     log.Fatal(http.ListenAndServe(localAddr, mux))
 }

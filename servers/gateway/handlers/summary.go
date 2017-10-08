@@ -9,8 +9,8 @@ import (
     "golang.org/x/net/html"
     "strings"
     "strconv"
-    "regexp"
     "fmt"
+    "net/url"
 )
 
 //PreviewImage represents a preview image for a page
@@ -42,23 +42,25 @@ type PageSummary struct {
 //a JSON-encoded PageSummary struct containing the page summary
 //meta-data.
 func SummaryHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Add("Access-Control-Allow-Origin", "*")
-    w.Header().Add("Content-Type", "application/json")
+    w.Header().Add(AccessControlAllowOriginKey, AccessControlAllowOriginVal)
+    w.Header().Add(ContentTypeKey, ContentTypeJSONUTF8Val)
 
     URL := r.URL.Query().Get("url")
 
     reader, err := fetchHTML(URL)
+
     if err != nil {
-        log.Fatalf("some error occurred when fetching HTML: %s", err)
+        http.Error(w, err.Error(), 400)
+        return
     }
+
+    defer reader.Close()
 
     pageSummary, err := extractSummary(URL, reader)
     if err != nil {
-        log.Fatalf("some error occurred when extracting HTML: %s", err)
+        http.Error(w, err.Error(), 400)
+        return
     }
-
-    reader.Close()
-
     json.NewEncoder(w).Encode(pageSummary)
 }
 
@@ -73,13 +75,13 @@ func fetchHTML(pageURL string) (io.ReadCloser, error) {
         return nil, fmt.Errorf("error fetching URL: %v\n", err)
     }
 
-    if resp.StatusCode != http.StatusOK {
+    if !(resp.StatusCode >= 200 && resp.StatusCode < 400) {
         return nil, fmt.Errorf("response status code was %d \n", resp.StatusCode)
     }
 
-    contentType := resp.Header.Get("Content-Type")
-    if !strings.HasPrefix(contentType, "text/html") {
-        return nil, fmt.Errorf("response content type was %s not text/html\n", contentType)
+    contentType := resp.Header.Get(ContentTypeKey)
+    if !strings.HasPrefix(contentType, ContentTypeHTMLVal) {
+        return nil, fmt.Errorf("response content type was %s not %s\n", contentType, ContentTypeHTMLVal)
     }
 
     return resp.Body, nil
@@ -93,76 +95,53 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
     pageSummary := &PageSummary{}
     tempPreviewImage := &PreviewImage{}
     for {
-        nextTokenType := tokenizer.Next()
+        tokenType := tokenizer.Next()
 
-        if nextTokenType == html.ErrorToken {
-            log.Printf("error tokenizing HTML: %v \n", tokenizer.Err())
-            break
+        if tokenType == html.ErrorToken {
+            return pageSummary, nil
         }
 
-        nextToken := tokenizer.Token()
+        t := tokenizer.Token()
 
-        if nextTokenType == html.EndTagToken && "head" == nextToken.Data {
-            break
+        if tokenType == html.EndTagToken && "head" == t.Data {
+            return pageSummary, nil
         }
 
-        switch nextToken.Data {
+        switch t.Data {
         case "link": {
-            attributes := nextToken.Attr
-            rel := findAndGetValueForAttribute(attributes, "rel")
-            if rel == "icon" {
-                href := findAndGetValueForAttribute(attributes, "href")
-                // href is required
-                if href == "" {
-                    log.Fatal("The href attribute is required on a link")
-                }
-                href = getAbsoluteURL(pageURL, href)
-                linkType := findAndGetValueForAttribute(attributes, "type")
-                width, height := parseLinkImageSizes(findAndGetValueForAttribute(attributes, "sizes"))
-
-                iconPreviewImage := &PreviewImage{
-                    URL: href,
-                    Width: width,
-                    Height: height,
-                    Type: linkType,
-                }
-
-                pageSummary.Icon = iconPreviewImage
+            err := handleLinkTagData(&t, pageURL, pageSummary)
+            if err != nil {
+                return nil, err
             }
         }
         case "meta": {
-            metaIDType := getMetaIDType(nextToken.Attr)
-            metaIDTypeVal := getMetaIDTypeVal(nextToken.Attr)
-            content := getMetaContent(nextToken.Attr)
+            metaIDType := getMetaIDType(t.Attr)
+            metaIDTypeVal := getMetaIDTypeVal(t.Attr)
+            content := getMetaContent(t.Attr)
             if metaIDTypeVal == "og:image" {
-                absoluteURL := getAbsoluteURL(pageURL, content)
+                absoluteURL, err := getAbsoluteURL(pageURL, content)
+                if err != nil {
+                    return nil, fmt.Errorf("error while parsing URL: %v", err)
+                }
                 if pageSummary.Images == nil {
                     pageSummary.Images = []*PreviewImage{}
                 }
-                if tempPreviewImage.URL != "" {
+                if tempPreviewImage.URL == "" {
+                    tempPreviewImage.URL = absoluteURL
+                } else {
                     // If new image entry, create new PreviewImage and update the PageSummary slice
                     tempPreviewImage = &PreviewImage{ URL: absoluteURL }
-                } else {
-                    tempPreviewImage.URL = absoluteURL
                 }
                 pageSummary.Images = append(pageSummary.Images, tempPreviewImage)
             } else if strings.HasPrefix(metaIDTypeVal, "og:image") {
                 // Add to image object
-                handlePreviewImageData(tempPreviewImage, metaIDTypeVal, content)
+                handlePreviewImageMetaData(tempPreviewImage, metaIDTypeVal, content)
             } else {
-                handleMetaTagData(pageSummary, metaIDType, metaIDTypeVal, content)
+                handleStandardMetaTagData(pageSummary, metaIDType, metaIDTypeVal, content)
             }
         }
         case "title": {
-            if nextToken.Type == html.StartTagToken {
-                tokenizer.Next()
-                titleToken := tokenizer.Token()
-                if titleToken.Type == html.TextToken {
-                    if pageSummary.Title == "" {
-                        pageSummary.Title = titleToken.Data
-                    }
-                }
-            }
+            handleTitle(&t, tokenizer, pageSummary)
         }
         default: // Do nothing!
         }
@@ -171,8 +150,47 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
     return pageSummary, nil
 }
 
+func handleTitle(t *html.Token, tokenizer *html.Tokenizer, pageSummary *PageSummary) {
+    if t.Type == html.StartTagToken {
+        tokenizer.Next()
+        titleToken := tokenizer.Token()
+        if titleToken.Type == html.TextToken {
+            if pageSummary.Title == "" {
+                pageSummary.Title = titleToken.Data
+            }
+        }
+    }
+}
 
-func handleMetaTagData(pageSummary *PageSummary, tagType, tagValue, content string) {
+func handleLinkTagData(t *html.Token, pageURL string, pageSummary *PageSummary) (error) {
+    attributes := t.Attr
+    rel := findAndGetValueForAttribute(attributes, "rel")
+    if rel == "icon" {
+        href := findAndGetValueForAttribute(attributes, "href")
+        // href is required
+        if href == "" {
+            return fmt.Errorf("the href attribute is required on a link")
+        }
+        href, err := getAbsoluteURL(pageURL, href)
+        if err != nil {
+            return fmt.Errorf("error while parsing URL: %v", err)
+        }
+        linkType := findAndGetValueForAttribute(attributes, "type")
+        width, height := parseLinkImageSizes(findAndGetValueForAttribute(attributes, "sizes"))
+
+        iconPreviewImage := &PreviewImage{
+            URL: href,
+            Width: width,
+            Height: height,
+            Type: linkType,
+        }
+
+        pageSummary.Icon = iconPreviewImage
+    }
+    return nil
+}
+
+func handleStandardMetaTagData(pageSummary *PageSummary, tagType, tagValue, content string) {
     switch tagType {
     case "name":
         switch tagValue {
@@ -204,7 +222,7 @@ func handleMetaTagData(pageSummary *PageSummary, tagType, tagValue, content stri
     }
 }
 
-func handlePreviewImageData(image *PreviewImage, imageAttribute, content string) {
+func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content string) (*PreviewImage) {
     switch imageAttribute {
     case "og:image:secure_url": {
         image.SecureURL = content
@@ -231,6 +249,7 @@ func handlePreviewImageData(image *PreviewImage, imageAttribute, content string)
     case "og:image:alt": image.Alt = content
     default: // Do nothing!
     }
+    return image
 }
 
 func getMetaIDTypeVal(attributes []html.Attribute) (string) {
@@ -290,65 +309,11 @@ func parseLinkImageSizes(sizes string) (int, int) {
     }
 }
 
-func getAbsoluteURL(parentURL, relativeUrl string) (string) {
-    httpsPrefix := "^https?://*"
-    matched, err := regexp.MatchString(httpsPrefix, relativeUrl)
+func getAbsoluteURL(parentURL, relativeUrl string) (string, error) {
+    url, err := url.Parse(parentURL)
     if err != nil {
-        log.Printf("regex was syntactically incorrect: %s", httpsPrefix)
+        return "", fmt.Errorf("illegal url: %s", parentURL)
     }
-
-    returnURL := ""
-    if matched {
-        // is absolute URL
-        returnURL = relativeUrl
-    } else {
-        // is relative URL
-        relativeDirBackCount := 0
-
-        // remove any and all `../`, `./`, `/` from the relative img path and count how many times they were removed
-        for {
-            if strings.HasPrefix(relativeUrl, "../") {
-                relativeUrl = strings.Replace(relativeUrl, "../", "", 1)
-                relativeDirBackCount++
-            } else if strings.HasPrefix(relativeUrl, "./")  {
-                relativeUrl = strings.Replace(relativeUrl, "./", "", 1)
-                relativeDirBackCount++
-            } else if strings.HasPrefix(relativeUrl, "/") {
-                relativeUrl = strings.Replace(relativeUrl, "/", "", 1)
-                relativeDirBackCount++
-            } else {
-                break
-            }
-        }
-
-        // sanitize parent URL to have no trailing `/`
-        if string(parentURL[len(parentURL) - 1]) == "/" {
-            parentURL = string(parentURL[:len(parentURL) - 1])
-        }
-
-        // separate protocol and URL body
-        protocolAndRestOfLink := strings.Split(parentURL, "://")
-
-        // split host and resources
-        urlPieces := strings.Split(protocolAndRestOfLink[1], "/")
-
-        // select only necessary resource paths, traversing up directories if the page provided was relative with `../` `./` `/`
-        relativePathUrlPieces := urlPieces[:len(urlPieces) - relativeDirBackCount]
-
-        // append sanitized relative path
-        relativePathUrlPieces = append(relativePathUrlPieces, relativeUrl)
-
-        // construct url body
-        linkBody := strings.Join(relativePathUrlPieces[:],"/")
-
-        // prepend protocol to joined link body
-        finalAbsoluteURLSlice := []string {protocolAndRestOfLink[0], linkBody}
-
-        // join protocol and link body
-        finalAbsoluteURL := strings.Join(finalAbsoluteURLSlice, "://")
-
-        returnURL = finalAbsoluteURL
-    }
-
-    return returnURL
+    childURL, err := url.Parse(relativeUrl)
+    return url.ResolveReference(childURL).String(), nil
 }
