@@ -23,8 +23,7 @@ func main() {
 	*/
 
     localAddr := os.Getenv("GO_ADDR")
-    fmt.Print(localAddr)
-    fmt.Println()
+    fmt.Printf("Go port: %s \n", localAddr)
     mux := http.NewServeMux()
 
     mux.HandleFunc("/v1/summary", handlers.SummaryHandler)

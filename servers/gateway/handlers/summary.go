@@ -135,7 +135,17 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
                 pageSummary.Images = append(pageSummary.Images, tempPreviewImage)
             } else if strings.HasPrefix(metaIDTypeVal, "og:image") {
                 // Add to image object
-                handlePreviewImageMetaData(tempPreviewImage, metaIDTypeVal, content)
+                err := handlePreviewImageMetaData(tempPreviewImage, metaIDTypeVal, content)
+                if err != nil {
+                    if metaIDTypeVal == "og:image:height" {
+                        tempPreviewImage.Height = 0
+                    } else if metaIDTypeVal == "og:image:height" {
+                        tempPreviewImage.Width = 0
+                    } else {
+                        // Uncaught error
+                        return nil, err
+                    }
+                }
             } else {
                 handleStandardMetaTagData(pageSummary, metaIDType, metaIDTypeVal, content)
             }
@@ -222,7 +232,7 @@ func handleStandardMetaTagData(pageSummary *PageSummary, tagType, tagValue, cont
     }
 }
 
-func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content string) (*PreviewImage) {
+func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content string) (error) {
     switch imageAttribute {
     case "og:image:secure_url": {
         image.SecureURL = content
@@ -231,8 +241,7 @@ func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content str
     case "og:image:width": {
         widthInt, err := strconv.Atoi(content)
         if err != nil {
-            log.Printf("an error occurred parsing the width: %s", err)
-            image.Width = 0
+            return fmt.Errorf("an error occurred parsing the width: %v", err)
         } else {
             image.Width = widthInt
         }
@@ -240,8 +249,7 @@ func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content str
     case "og:image:height": {
         heightInt, err := strconv.Atoi(content)
         if err != nil {
-            log.Printf("an error occurred parsing the height: %s", err)
-            image.Height = 0
+            return fmt.Errorf("an error occurred parsing the height: %v", err)
         } else {
             image.Height = heightInt
         }
@@ -249,7 +257,7 @@ func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content str
     case "og:image:alt": image.Alt = content
     default: // Do nothing!
     }
-    return image
+    return nil
 }
 
 func getMetaIDTypeVal(attributes []html.Attribute) (string) {
