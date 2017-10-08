@@ -107,17 +107,20 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
             return pageSummary, nil
         }
 
+        attributeMap := getAttributeMap(t.Attr)
+
         switch t.Data {
         case "link": {
-            err := handleLinkTagData(&t, pageURL, pageSummary)
+            err := handleLinkTagData(attributeMap, pageURL, pageSummary)
             if err != nil {
                 return nil, err
             }
         }
         case "meta": {
-            metaIDType := getMetaIDType(t.Attr)
-            metaIDTypeVal := getMetaIDTypeVal(t.Attr)
-            content := getMetaContent(t.Attr)
+
+            metaIDType := attributeMap["metaIdType"]
+            metaIDTypeVal := attributeMap["metaIdVal"]
+            content := attributeMap["content"]
             if metaIDTypeVal == "og:image" {
                 absoluteURL, err := getAbsoluteURL(pageURL, content)
                 if err != nil {
@@ -172,11 +175,10 @@ func handleTitle(t *html.Token, tokenizer *html.Tokenizer, pageSummary *PageSumm
     }
 }
 
-func handleLinkTagData(t *html.Token, pageURL string, pageSummary *PageSummary) (error) {
-    attributes := t.Attr
-    rel := findAndGetValueForAttribute(attributes, "rel")
+func handleLinkTagData(attributeMap map[string]string, pageURL string, pageSummary *PageSummary) (error) {
+    rel := attributeMap["rel"]
     if rel == "icon" {
-        href := findAndGetValueForAttribute(attributes, "href")
+        href := attributeMap["href"]
         // href is required
         if href == "" {
             return fmt.Errorf("the href attribute is required on a link")
@@ -185,8 +187,11 @@ func handleLinkTagData(t *html.Token, pageURL string, pageSummary *PageSummary) 
         if err != nil {
             return fmt.Errorf("error while parsing URL: %v", err)
         }
-        linkType := findAndGetValueForAttribute(attributes, "type")
-        width, height := parseLinkImageSizes(findAndGetValueForAttribute(attributes, "sizes"))
+        linkType := attributeMap["type"]
+        width, height, err := parseLinkImageSizes(attributeMap["sizes"])
+        if err != nil {
+            log.Printf("error while parsing image size: %v \n defaulting height and width to be 0 \n", err)
+        }
 
         iconPreviewImage := &PreviewImage{
             URL: href,
@@ -260,68 +265,45 @@ func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content str
     return nil
 }
 
-func getMetaIDTypeVal(attributes []html.Attribute) (string) {
-    name := findAndGetValueForAttribute(attributes, "name")
-    property := findAndGetValueForAttribute(attributes, "property")
-    if property != "" {
-        return property
-    } else {
-        return name
-    }
-}
+func getAttributeMap(attributes []html.Attribute) (map[string]string) {
+    attributeMap := map[string]string{}
 
-func getMetaIDType(attributes []html.Attribute) (string) {
-    metaIDType := ""
     for _, element := range attributes {
         if element.Key == "name" || element.Key == "property" {
-            metaIDType = element.Key
+            attributeMap["metaIdType"] = element.Key
+            attributeMap["metaIdVal"] = element.Val
+        } else {
+            attributeMap[element.Key] = element.Val
         }
     }
 
-    return metaIDType
+    return attributeMap
 }
 
-func getMetaContent(attributes []html.Attribute) (string) {
-    return findAndGetValueForAttribute(attributes, "content")
-}
-
-func findAndGetValueForAttribute(attributes []html.Attribute, targetAttribute string) (string) {
-    metaIDType := ""
-    for _, element := range attributes {
-        if element.Key == targetAttribute {
-            metaIDType = element.Val
-        }
-    }
-
-    return metaIDType
-}
-
-func parseLinkImageSizes(sizes string) (int, int) {
+func parseLinkImageSizes(sizes string) (int, int, error) {
     if sizes != "" && sizes != "any" {
         parsedSizes := strings.Split(sizes, "x")
         height, err := strconv.Atoi(parsedSizes[0])
 
         if err != nil {
-            log.Printf("Failure parsing height: %s \n", err)
-            height = 0
+            return 0, 0, err
         }
 
         width, err := strconv.Atoi(parsedSizes[1])
         if err != nil {
-            log.Printf("Failure parsing width: %s \n", err)
-            width = 0
+            return 0, 0, err
         }
-        return width, height
+        return width, height, nil
     } else {
-        return 0, 0
+        return 0, 0, nil
     }
 }
 
 func getAbsoluteURL(parentURL, relativeUrl string) (string, error) {
-    url, err := url.Parse(parentURL)
+    parsedURL, err := url.Parse(parentURL)
     if err != nil {
         return "", fmt.Errorf("illegal url: %s", parentURL)
     }
     childURL, err := url.Parse(relativeUrl)
-    return url.ResolveReference(childURL).String(), nil
+    return parsedURL.ResolveReference(childURL).String(), nil
 }
