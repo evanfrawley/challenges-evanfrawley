@@ -144,6 +144,7 @@ func TestExtractSummary(t *testing.T) {
 			<meta property="og:image:height" content="100">
 			<meta property="og:image:alt" content="test alt 1">
 			<meta property="og:image" content="http://test.com/test2.png">
+			<meta property="og:image:alt" content="test alt 2">
 			<meta property="og:image" content="http://test.com/test3.png">
 			<meta property="og:image:alt" content="test alt 3">
 			` + pageEiplogue,
@@ -157,6 +158,7 @@ func TestExtractSummary(t *testing.T) {
 					},
 					{
 						URL: "http://test.com/test2.png",
+						Alt:    "test alt 2",
 					},
 					{
 						URL: "http://test.com/test3.png",

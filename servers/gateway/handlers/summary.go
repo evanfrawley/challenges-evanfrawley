@@ -148,9 +148,9 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
                 metaIDType := attributeMap["metaIdType"]
                 metaIDTypeVal := attributeMap["metaIdVal"]
                 content := attributeMap["content"]
-                if metaIDTypeVal == "og:image" {
+                if metaIDTypeVal == "og:image" || metaIDTypeVal == "og:image:url" {
                     // Handle initialize images slice
-                    newTempPreviewImage, err := initializeOrAppendImagesSlice(pageSummary, tempPreviewImage, pageURL, content)
+                    newTempPreviewImage, err := initializeAndAppendImagesSlice(pageSummary, tempPreviewImage, pageURL, content)
                     if err != nil {
                         return nil, err
                     }
@@ -212,7 +212,7 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
                                 }
                             }
                             if !hasTwitterImg {
-                                newTempPreviewImage, err := initializeOrAppendImagesSlice(pageSummary, tempPreviewImage, pageURL, content)
+                                newTempPreviewImage, err := initializeAndAppendImagesSlice(pageSummary, tempPreviewImage, pageURL, content)
                                 if err != nil {
                                     return nil, err
                                 }
@@ -250,7 +250,7 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
     return pageSummary, nil
 }
 
-func initializeOrAppendImagesSlice(pageSummary *PageSummary, image *PreviewImage, pageURL, content string) (*PreviewImage, error) {
+func initializeAndAppendImagesSlice(pageSummary *PageSummary, image *PreviewImage, pageURL, content string) (*PreviewImage, error) {
     absoluteURL, err := getAbsoluteURL(pageURL, content)
     if err != nil {
         return nil, fmt.Errorf("error while parsing URL: %v", err)
@@ -258,12 +258,7 @@ func initializeOrAppendImagesSlice(pageSummary *PageSummary, image *PreviewImage
     if pageSummary.Images == nil {
         pageSummary.Images = []*PreviewImage{}
     }
-    if image.URL == "" {
-        image.URL = absoluteURL
-    } else {
-        // If new image entry, create new PreviewImage and update the PageSummary slice
-        image = &PreviewImage{URL: absoluteURL}
-    }
+    image = &PreviewImage{URL: absoluteURL}
     pageSummary.Images = append(pageSummary.Images, image)
     return image, nil
 }

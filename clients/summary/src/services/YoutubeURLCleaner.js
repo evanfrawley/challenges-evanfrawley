@@ -16,7 +16,9 @@ export function getEmbedYoutubeUrl(rawUrl) {
                 let idParam = queryParams.filter((param) => {
                     return param.startsWith("v=");
                 });
+                console.log('idparam', idParam);
                 let id = idParam.replace("v=", "");
+                console.log('id', id)
                 return `http://youtube.com/embed/${id}`;
             } else if (rawUrl.match(YOUTUBE_URL_V_RESOURCE)) {
                 // snag from youtube.com/v/{id}
