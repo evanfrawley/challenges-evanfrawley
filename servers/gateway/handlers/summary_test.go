@@ -96,6 +96,46 @@ func TestExtractSummary(t *testing.T) {
 			},
 		},
 		{
+			"Open Graph Structured Video",
+			`Make sure you are handling the image structured properties, as described in http://ogp.me/#structured`,
+			pagePrologue + `
+			<meta property="og:video" content="http://test.com/test.mp4">
+			<meta property="og:video:secure_url" content="https://test.com/test.mp4">
+			<meta property="og:video:type" content="video/mp4">
+			<meta property="og:video:width" content="300">
+			<meta property="og:video:height" content="300">
+			` + pageEiplogue,
+			&PageSummary{
+				Videos: []*PreviewVideo{
+					{
+						URL:       "http://test.com/test.mp4",
+						SecureURL: "https://test.com/test.mp4",
+						Type:      "video/mp4",
+						Width:     300,
+						Height:    300,
+					},
+				},
+			},
+		},
+		{
+			"Open Graph Structured Audio",
+			`Make sure you are handling the image structured properties, as described in http://ogp.me/#structured`,
+			pagePrologue + `
+			<meta property="og:audio" content="http://test.com/test.mp3">
+			<meta property="og:audio:secure_url" content="https://test.com/test.mp3">
+			<meta property="og:audio:type" content="audio/mp3">
+			` + pageEiplogue,
+			&PageSummary{
+				Audio: []*PreviewAudio{
+					{
+						URL:       "http://test.com/test.mp3",
+						SecureURL: "https://test.com/test.mp3",
+						Type:      "audio/mp3",
+					},
+				},
+			},
+		},
+		{
 			"Open Graph Multiple Images",
 			`Make sure you are handling multiple images, as described in http://ogp.me/#array`,
 			pagePrologue + `
@@ -121,6 +161,62 @@ func TestExtractSummary(t *testing.T) {
 					{
 						URL: "http://test.com/test3.png",
 						Alt: "test alt 3",
+					},
+				},
+			},
+		},
+		{
+			"Open Graph Multiple Videos",
+			`Make sure you are handling multiple images, as described in http://ogp.me/#array`,
+			pagePrologue + `
+			<meta property="og:video" content="http://test.com/test1.mp4">
+			<meta property="og:video:width" content="100">
+			<meta property="og:video:height" content="100">
+			<meta property="og:video" content="http://test.com/test2.mp4">
+			<meta property="og:video" content="http://test.com/test3.mp4">
+			<meta property="og:video:height" content="100">
+			` + pageEiplogue,
+			&PageSummary{
+				Videos: []*PreviewVideo{
+					{
+						URL:    "http://test.com/test1.mp4",
+						Width:  100,
+						Height: 100,
+					},
+					{
+						URL: "http://test.com/test2.mp4",
+					},
+					{
+						URL: "http://test.com/test3.mp4",
+						Height: 100,
+					},
+				},
+			},
+		},
+		{
+			"Open Graph Multiple Audio files",
+			`Make sure you are handling multiple images, as described in http://ogp.me/#array`,
+			pagePrologue + `
+			<meta property="og:audio" content="http://test.com/test1.mp3">
+			<meta property="og:audio:secure_url" content="https://test.com/test1.mp3">
+			<meta property="og:audio:type" content="audio/mp3">
+			<meta property="og:audio" content="http://test.com/test2.mp3">
+			<meta property="og:audio" content="http://test.com/test3.mp3">
+			<meta property="og:audio:type" content="audio/mp3">
+			` + pageEiplogue,
+			&PageSummary{
+				Audio: []*PreviewAudio{
+					{
+						URL:    "http://test.com/test1.mp3",
+						SecureURL:  "https://test.com/test1.mp3",
+						Type: "audio/mp3",
+					},
+					{
+						URL: "http://test.com/test2.mp3",
+					},
+					{
+						URL: "http://test.com/test3.mp3",
+						Type: "audio/mp3",
 					},
 				},
 			},
@@ -288,6 +384,49 @@ func TestExtractSummary(t *testing.T) {
 				Icon: &PreviewImage{
 					URL: "http://test.com/test.png",
 				},
+			},
+		},
+		{
+			"Twitter Scheme",
+			"Check out the twitter documentation",
+			pagePrologue + `
+			<meta property="twitter:card" content="some_twitter_content"/>
+			<meta property="twitter:image" content="http://test.com/test.png"/>
+			<meta property="twitter:description" content="this should be the description"/>
+			<meta property="twitter:title" content="twitter scheme is cool"/>
+			` + pageEiplogue,
+			&PageSummary{
+				Images: []*PreviewImage{
+					{
+						URL: "http://test.com/test.png",
+					},
+				},
+				Title: "twitter scheme is cool",
+				Description: "this should be the description",
+				Type: "some_twitter_content",
+			},
+		},
+		{
+			"Twitter Scheme with Open Graph content",
+			"Check out the twitter documentation",
+			pagePrologue + `
+			<meta property="og:type" content="text/html"/>
+			<meta property="og:description" content="open graph helps devs"/>
+			<meta property="og:title" content="open graph is cool"/>
+			<meta property="twitter:card" content="some_twitter_content"/>
+			<meta property="twitter:image" content="http://test.com/test.png"/>
+			<meta property="twitter:description" content="this should be the description"/>
+			<meta property="twitter:title" content="twitter scheme is cool"/>
+			` + pageEiplogue,
+			&PageSummary{
+				Images: []*PreviewImage{
+					{
+						URL: "http://test.com/test.png",
+					},
+				},
+				Title: "open graph is cool",
+				Description: "open graph helps devs",
+				Type: "text/html",
 			},
 		},
 		{
