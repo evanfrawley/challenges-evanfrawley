@@ -1,16 +1,16 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import 'whatwg-fetch';
 import './App.css';
 
-import * as GoApiService from './services/goApiService.js';
-import * as YoutubeService from './services/YoutubeURLCleaner.js';
+import * as GoApiService from './services/GoApiService.js';
+import { createEmbedVideoArray } from './services/YoutubeService.js';
 
 class App extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            summary: { data: 'empty' },
+            summary: null,
         }
     }
 
@@ -23,34 +23,24 @@ class App extends Component {
     }
 
     render() {
+        let imageDiv = null;
         let videoDiv = null;
-        if (this.state.summary && this.state.summary.videos) {
-            let videos = this.state.summary.videos.map((video) => {
-                console.log(video);
-                let cleanVideoUrl = YoutubeService.getEmbedYoutubeUrl(video.url);
-                console.log('clean', cleanVideoUrl);
-                if (video.type) {
-                    if(video.type === "text/html") {
-                        return (
-                            <div key={cleanVideoUrl}>
-                                <iframe src={cleanVideoUrl}></iframe>
-                            </div>
-                        );
-                    } else if (video.type.startsWith("video/")) {
-                        return (
-                            <div key={cleanVideoUrl}>
-                                <video src={cleanVideoUrl}></video>
-                            </div>
-                        );
-                    }
-                } else {
-                    return (
-                        <div key={cleanVideoUrl}>
-                            <iframe src={cleanVideoUrl}></iframe>
-                        </div>
-                    );
-                }
+        if (this.state.summary && this.state.summary.images) {
+            let images = this.state.summary.images.map((image) => {
+                let height = image.height ? image.height : 'auto';
+                let width = image.width ? image.width : 'auto';
+                let type = image.type ? image.type : '';
+                let alt = image.alt ? image.alt : '';
+                return <img src={image.url} alt={alt} height={height} width={width} type={type}/>
             });
+            imageDiv = (
+                <div>
+                    {images}
+                </div>
+            )
+        }
+        if (this.state.summary && this.state.summary.videos) {
+            let videos = createEmbedVideoArray(this.state.summary.videos);
             videoDiv = (
                 <div>
                     {videos}
@@ -59,10 +49,7 @@ class App extends Component {
         }
         return (
             <div className="App">
-                <h1>This is a generic web client for INFO344</h1>
-                <div>
-                    <p>to test video, try using this URL: https://www.keithandthegirl.com/vip/bonus/episode/9/40/this-is-40</p>
-                </div>
+                <h1>Page Summary</h1>
                 <div>
                     <form onSubmit={this.handleOnSubmit.bind(this)}>
                         URL to get summary for: <input type="text" placeholder="e.g.: https://google.com" name="url"/>
@@ -70,12 +57,26 @@ class App extends Component {
                     </form>
                 </div>
                 <div className="json-container">
-                    <pre className="align-left">{JSON.stringify(this.state.summary, null, 2)}</pre>
+                    {this.state.summary &&
+                        <div className="align-left">
+                            {this.state.summary.title &&
+                            <p>Title: {this.state.summary.title}</p>
+                            }
+                            {this.state.summary.url &&
+                                <p>URL: <a href={this.state.summary.url}>{this.state.summary.url}</a></p>
+                            }
+                            {this.state.summary.description &&
+                                <p>Description: {this.state.summary.description}</p>
+                            }
+                            {imageDiv && imageDiv}
+                            {videoDiv && videoDiv}
+                        </div>
+                    }
                 </div>
-                { videoDiv && videoDiv }
             </div>
         );
     }
 }
+
 
 export default App;

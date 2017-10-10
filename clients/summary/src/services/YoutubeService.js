@@ -1,3 +1,5 @@
+import React from 'react';
+
 const YOUTUBE_EMBED_URL_REGEX = "^https?://(www.)?youtube.com/embed/.+";
 const YOUTUBE_URL_WATCH_QP_REGEX = "^https?://(www.)?youtube.com/watch?.+v=.+";
 const YOUTUBE_URL_V_RESOURCE = "^https?://(www.)?youtube.com/v/.+";
@@ -18,7 +20,7 @@ export function getEmbedYoutubeUrl(rawUrl) {
                 });
                 console.log('idparam', idParam);
                 let id = idParam.replace("v=", "");
-                console.log('id', id)
+                console.log('id', id);
                 return `http://youtube.com/embed/${id}`;
             } else if (rawUrl.match(YOUTUBE_URL_V_RESOURCE)) {
                 // snag from youtube.com/v/{id}
@@ -28,4 +30,33 @@ export function getEmbedYoutubeUrl(rawUrl) {
             }
         }
     }
+}
+
+export function createEmbedVideoArray(videos) {
+    return videos.map((video) => {
+        console.log(video);
+        let cleanVideoUrl = getEmbedYoutubeUrl(video.url);
+        console.log('clean', cleanVideoUrl);
+        if (video.type) {
+            if (video.type === "text/html") {
+                return (
+                    <div key={cleanVideoUrl}>
+                        <iframe src={cleanVideoUrl}></iframe>
+                    </div>
+                );
+            } else if (video.type.startsWith("video/")) {
+                return (
+                    <div key={cleanVideoUrl}>
+                        <video src={cleanVideoUrl}></video>
+                    </div>
+                );
+            }
+        } else {
+            return (
+                <div key={cleanVideoUrl}>
+                    <iframe src={cleanVideoUrl}></iframe>
+                </div>
+            );
+        }
+    });
 }

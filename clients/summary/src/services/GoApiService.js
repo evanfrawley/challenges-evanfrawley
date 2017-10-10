@@ -17,5 +17,6 @@ export function getSummaryResourcePromise(urlToQuery) {
         })
         .catch(function(err) {
             console.error(err);
+            alert(`You were given the following error:\n${err}`)
         });
 }
