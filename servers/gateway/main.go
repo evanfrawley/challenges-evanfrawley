@@ -5,7 +5,7 @@ import (
     "net/http"
     "fmt"
     "log"
-    "challenges-evanfrawley/servers/gateway/handlers"
+    "github.com/info344-a17/challenges-evanfrawley/servers/gateway/handlers"
 )
 
 //main is the main entry point for the server
@@ -23,6 +23,7 @@ func main() {
 	*/
 
     localAddr := os.Getenv("GO_ADDR")
+
     fmt.Printf("Go port: %s \n", localAddr)
     mux := http.NewServeMux()
 
