@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
-docker build -t evanfrawley/chat-client .
-docker push evanfrawley/chat-client
+source build.sh
+docker push evanfrawley/gateway-api
+
+ssh -oStrictHostKeyChecking=no root@104.236.5.41 'bash -s' < run.sh
