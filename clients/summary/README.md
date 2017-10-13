@@ -1,3 +1,17 @@
-# Summary API Web Client
+# Web Client for INFO344
 
-Build your summary web client here. Keep it simple. No need to use a fancy framework, unless you really want to. You will build a different client for the full messages system.
+This serves as my generic client code for INFO344 related things.
+
+## Installation
+Run
+```
+yarn
+```
+
+## Running
+Run
+```
+yarn start
+```
+and go to
+[`localhost:3000`](http://localhost:3000)

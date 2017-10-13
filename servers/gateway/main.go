@@ -1,5 +1,13 @@
 package main
 
+import (
+    "os"
+    "net/http"
+    "fmt"
+    "log"
+    "challenges-evanfrawley/servers/gateway/handlers"
+)
+
 //main is the main entry point for the server
 func main() {
 	/* TODO: add code to do the following
@@ -14,4 +22,12 @@ func main() {
 	  that occur when trying to start the web server.
 	*/
 
+    localAddr := os.Getenv("GO_ADDR")
+    fmt.Printf("Go port: %s \n", localAddr)
+    mux := http.NewServeMux()
+
+    mux.HandleFunc("/v1/summary", handlers.SummaryHandler)
+
+    fmt.Printf("server is listening at http://%s \n", localAddr)
+    log.Fatal(http.ListenAndServe(localAddr, mux))
 }
