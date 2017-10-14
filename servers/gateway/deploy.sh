@@ -2,4 +2,4 @@
 source build.sh
 docker push evanfrawley/gateway-api
 
-ssh -oStrictHostKeyChecking=no root@104.236.5.41 'bash -s' < run.sh
+ssh -oStrictHostKeyChecking=no root@198.211.98.217 'bash -s' < run.sh

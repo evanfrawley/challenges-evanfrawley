@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-export TLSCERT=/etc/letsencrypt/live/api.evan.gg/fullchain.pem
-export TLSKEY=/etc/letsencrypt/live/api.evan.gg/privkey.pem
+export TLSCERT=/etc/letsencrypt/live/test2.evan.gg/fullchain.pem
+export TLSKEY=/etc/letsencrypt/live/test2.evan.gg/privkey.pem
 
 docker rm -f 344gateway
 
