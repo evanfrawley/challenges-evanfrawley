@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
-source init_droplet.sh
+cd ../../scripts/
+source /init_droplet.sh
+cd ../servers/gateway/
 source deploy.sh "api"
