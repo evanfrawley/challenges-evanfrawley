@@ -5,29 +5,24 @@ import (
     "net/http"
     "fmt"
     "log"
-    "challenges-evanfrawley/servers/gateway/handlers"
+    "github.com/info344-a17/challenges-evanfrawley/servers/gateway/handlers"
 )
 
 //main is the main entry point for the server
 func main() {
-	/* TODO: add code to do the following
-	- Read the ADDR environment variable to get the address
-	  the server should listen on. If empty, default to ":80"
-	- Create a new mux for the web server.
-	- Tell the mux to call your handlers.SummaryHandler function
-	  when the "/v1/summary" URL path is requested.
-	- Start a web server listening on the address you read from
-	  the environment variable, using the mux you created as
-	  the root handler. Use log.Fatal() to report any errors
-	  that occur when trying to start the web server.
-	*/
-
     localAddr := os.Getenv("GO_ADDR")
+    if len(localAddr) == 0 {
+        localAddr = ":443"
+    }
+
+    tlsKeyPath := os.Getenv("TLSKEY")
+    tlsCertPath := os.Getenv("TLSCERT")
+
     fmt.Printf("Go port: %s \n", localAddr)
     mux := http.NewServeMux()
 
     mux.HandleFunc("/v1/summary", handlers.SummaryHandler)
 
     fmt.Printf("server is listening at http://%s \n", localAddr)
-    log.Fatal(http.ListenAndServe(localAddr, mux))
+    log.Fatal(http.ListenAndServeTLS(localAddr, tlsCertPath, tlsKeyPath, mux))
 }
