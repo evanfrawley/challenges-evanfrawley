@@ -1,6 +1,6 @@
 import 'whatwg-fetch';
 
-const LOCAL_GO_API_PATH = "http://localhost:4000";
+const LOCAL_GO_API_PATH = "https://api.evan.gg";
 
 export function getSummaryResourcePromise(urlToQuery) {
     let path = "/v1/summary";
