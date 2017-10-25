@@ -9,6 +9,8 @@ import (
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/sessions"
     //"github.com/go-redis/redis"
     //"time"
+    "github.com/info344-a17/challenges-evanfrawley/servers/gateway/models/users"
+    "gopkg.in/mgo.v2"
 )
 
 //main is the main entry point for the server
@@ -21,8 +23,8 @@ func main() {
     //tlsKeyPath := os.Getenv("TLSKEY")
     //tlsCertPath := os.Getenv("TLSCERT")
 
-    tlsKeyPath := "/Users/evanfrawley/go/src/github.com/info344-a17/challenges-evanfrawley/servers/gateway/tls/privkey.pem"
-    tlsCertPath := "/Users/evanfrawley/go/src/github.com/info344-a17/challenges-evanfrawley/servers/gateway/tls/fullchain.pem"
+    //tlsKeyPath := "/Users/evanfrawley/go/src/github.com/info344-a17/challenges-evanfrawley/servers/gateway/tls/privkey.pem"
+    //tlsCertPath := "/Users/evanfrawley/go/src/github.com/info344-a17/challenges-evanfrawley/servers/gateway/tls/fullchain.pem"
 
     fmt.Printf("Go port: %s \n", localAddr)
     mux := http.NewServeMux()
@@ -40,9 +42,18 @@ func main() {
     //fmt.Println(pong, err)
 
     //sessions.BeginSession("nice", store, )
+    mongoSess, err := mgo.Dial("localhost")
+    if err != nil {
+        log.Fatalf("error dialing mongo: %v", err)
+    }
+
+    mongoStore := users.NewMongoStore(mongoSess, "users", "users")
+    ctx := handlers.NewHandlerContext(mongoStore)
 
     mux.HandleFunc("/v1/summary", handlers.SummaryHandler)
+    mux.HandleFunc("/v1/user", ctx.UsersHandler)
 
     fmt.Printf("server is listening at http://%s \n", localAddr)
-    log.Fatal(http.ListenAndServeTLS(localAddr, tlsCertPath, tlsKeyPath, mux))
+    log.Fatal(http.ListenAndServe(localAddr, mux))
+    //log.Fatal(http.ListenAndServeTLS(localAddr, tlsCertPath, tlsKeyPath, mux))
 }

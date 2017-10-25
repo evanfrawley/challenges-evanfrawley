@@ -66,7 +66,7 @@ func TestValidateNewUser(t *testing.T) {
         },
         {
             name: "Invalid NewUser - Username empty",
-            hint: "Test to see if there is anything in the username",
+            hint: "Test to see if there is anything in the Username",
             newUser: &NewUser{
                 Email:        "test@test.com",
                 Password:     "password",

@@ -35,7 +35,8 @@ func (ms *MemStore) Save(uid bson.ObjectId, user interface{}) error {
 }
 
 //Get populates `user` with the data previously saved
-//for the given user id
+//for the given user ID
+// TODO remove
 func (ms *MemStore) Get(uid bson.ObjectId, user interface{}) error {
     j, found := ms.entries.Get(uid.String())
     if !found {
@@ -46,8 +47,31 @@ func (ms *MemStore) Get(uid bson.ObjectId, user interface{}) error {
     return json.Unmarshal(j.([]byte), user)
 }
 
-//Delete deletes all user data associated with the user id from the store.
+// TODO
+func (ms *MemStore) GetByID(uid bson.ObjectId) error {
+    ms.entries.Delete(uid.String())
+    return nil
+}
+
+// TODO
+func (ms *MemStore) GetByEmail(email string) error {
+    ms.entries.Delete(email)
+    return nil
+}
+
+// TODO
+func (ms *MemStore) GetByUserName(username string) error {
+    ms.entries.Delete(username)
+    return nil
+}
+
+//Delete deletes all user data associated with the user ID from the store.
 func (ms *MemStore) Delete(uid bson.ObjectId) error {
     ms.entries.Delete(uid.String())
+    return nil
+}
+
+// TODO
+func (ms *MemStore) Update(uid bson.ObjectId, updates *Updates) error {
     return nil
 }

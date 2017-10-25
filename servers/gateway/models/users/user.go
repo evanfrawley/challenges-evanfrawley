@@ -118,7 +118,6 @@ func (u *User) SetPassword(password string) error {
     }
 
     u.PassHash = pwHashBytes
-    //fmt.Printf("hash: %s", string(u.PassHash))
     return nil
 }
 
