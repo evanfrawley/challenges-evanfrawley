@@ -21,7 +21,7 @@ func TestMongoStore(t *testing.T) {
         LastName: testLastName,
         Email: testEmail,
         UserName: testUsername,
-        PhotoURL: "https://www.gravatar.com/avatar/844ab0f2f8ce63760d92b75722be5b87",
+        PhotoURL: "https://www.gravatar.com/avatar/b642b4217b34b1e8d3bd915fc65c4452",
     }
 
     testNewUser := &NewUser{
