@@ -16,6 +16,14 @@ func TestMongoStore(t *testing.T) {
     testEmail := "test@test.com"
     testUsername := "testUsername"
 
+    newFirstName := "newFName"
+    newLastName := "newLName"
+
+    updates := &Updates{
+        FirstName: newFirstName,
+        LastName: newLastName,
+    }
+
     testUser := &User{
         FirstName: testFirstName,
         LastName: testLastName,
@@ -55,6 +63,7 @@ func TestMongoStore(t *testing.T) {
     if  err != nil {
         t.Fatalf("error saving user: %v", err)
     }
+
     testID = insertedUser.ID
     testUser.ID = testID
 
@@ -87,6 +96,27 @@ func TestMongoStore(t *testing.T) {
     if err = checkEqualToTestValue(user, testUser); err != nil {
         t.Error(err)
     }
+
+
+    if err = store.Update(testID, updates); err != nil {
+        t.Error(err)
+    }
+
+    // Get user after updating
+    user, err = store.GetByID(testID)
+
+    if err != nil {
+        t.Fatalf("error getting user: %v", err)
+    }
+
+    // Update test object inline
+    testUser.FirstName = newFirstName
+    testUser.LastName = newLastName
+
+    if err = checkEqualToTestValue(user, testUser); err != nil {
+        t.Error(err)
+    }
+
 
     if err := store.Delete(testID); err != nil {
         t.Errorf("error deleting user: %v", err)

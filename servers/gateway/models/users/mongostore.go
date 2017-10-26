@@ -9,7 +9,7 @@ import (
 type userFilter struct {
     Email    string        `bson:"email,omitempty"`
     ID       bson.ObjectId `bson:"_id,omitempty"`
-    Username string        `bson:"username,omitempty"`
+    Username string        `bson:"userName,omitempty"`
 }
 
 type userUpdateDoc struct {

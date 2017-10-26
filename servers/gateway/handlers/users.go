@@ -46,7 +46,6 @@ func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
 func (ctx *Context) UsersSpecificHandler(w http.ResponseWriter, r *http.Request) {
     switch r.Method {
     case "PATCH": {
-        // TODO do stuff of getting the current user to update
         uid := bson.ObjectIdHex(path.Base(r.URL.Path))
 
         uu := &users.Updates{}

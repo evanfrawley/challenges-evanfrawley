@@ -76,9 +76,7 @@ func (ms *MemStore) Update(uid bson.ObjectId, updates *Updates) error {
                 user.LastName = updates.LastName
             }
             ms.users[index] = user
-            if user.ID == uid {
-                return nil
-            }
+            return nil
         }
     }
 
