@@ -40,15 +40,15 @@ func TestMongoStore(t *testing.T) {
 
     store := NewMongoStore(mongoSession, "users", "users")
 
-    if u, err := store.GetByID(testID); u == nil && err != ErrUserNotFound {
+    if _, err := store.GetByID(testID); err != ErrUserNotFound {
         t.Errorf("incorrect error when getting user that was never stored: expected %v but got %v", ErrUserNotFound, err)
     }
 
-    if u, err := store.GetByEmail(testEmail); u == nil && err != ErrUserNotFound {
+    if _, err := store.GetByEmail(testEmail); err != ErrUserNotFound {
         t.Errorf("incorrect error when getting user that was never stored: expected %v but got %v", ErrUserNotFound, err)
     }
 
-    if u, err := store.GetByUserName(testUsername); u == nil && err != ErrUserNotFound {
+    if _, err := store.GetByUserName(testUsername); err != ErrUserNotFound {
         t.Errorf("incorrect error when getting user that was never stored: expected %v but got %v", ErrUserNotFound, err)
     }
     insertedUser, err := store.Insert(testNewUser)
