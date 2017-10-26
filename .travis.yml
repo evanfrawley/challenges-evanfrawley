@@ -3,3 +3,4 @@ go:
   - 1.9.x
 services:
   - redis-server
+  - mongodb
