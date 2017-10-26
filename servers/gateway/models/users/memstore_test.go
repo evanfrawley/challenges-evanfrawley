@@ -82,9 +82,11 @@ func TestMemStore(t *testing.T) {
 }
 
 func checkEqualToTestValue(user, userExpected *User) error {
+    // ignore the pass hash for testing
+    userExpected.PassHash = user.PassHash
     if !reflect.DeepEqual(user, userExpected) {
-        jexp, _ := json.MarshalIndent(user, "", "  ")
-        jact, _ := json.MarshalIndent(userExpected, "", "  ")
+        jexp, _ := json.MarshalIndent(userExpected, "", "  ")
+        jact, _ := json.MarshalIndent(user, "", "  ")
         return fmt.Errorf("incorrect state retrieved:\nEXPECTED\n%s\nACTUAL\n%s", string(jexp), string(jact))
     }
     return nil
