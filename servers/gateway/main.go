@@ -39,19 +39,19 @@ func main() {
     //store := sessions.NewRedisStore(client, time.Hour)
     //
     //pong, err := client.Ping().Result()
-    //fmt.Println(pong, err)
 
     //sessions.BeginSession("nice", store, )
-    mongoSess, err := mgo.Dial("localhost")
+    mongoSession, err := mgo.Dial("localhost")
     if err != nil {
         log.Fatalf("error dialing mongo: %v", err)
     }
 
-    mongoStore := users.NewMongoStore(mongoSess, "users", "users")
+    mongoStore := users.NewMongoStore(mongoSession, "users", "users")
     ctx := handlers.NewHandlerContext(mongoStore)
 
     mux.HandleFunc("/v1/summary", handlers.SummaryHandler)
-    mux.HandleFunc("/v1/user", ctx.UsersHandler)
+    mux.HandleFunc("/v1/users", ctx.UsersHandler)
+    mux.HandleFunc("/v1/user", ctx.UsersSpecificHandler)
 
     fmt.Printf("server is listening at http://%s \n", localAddr)
     log.Fatal(http.ListenAndServe(localAddr, mux))

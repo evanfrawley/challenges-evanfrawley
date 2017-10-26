@@ -1,10 +1,6 @@
 package users
 
 import (
-    "encoding/json"
-    "time"
-
-    "github.com/patrickmn/go-cache"
     "gopkg.in/mgo.v2/bson"
 )
 
@@ -12,66 +8,79 @@ import (
 //This should be used only for testing and prototyping.
 //Production systems should use a shared server store like redis
 type MemStore struct {
-    entries *cache.Cache
+    users []User
 }
 
 //NewMemStore constructs and returns a new MemStore
-func NewMemStore(userDuration time.Duration, purgeInterval time.Duration) *MemStore {
+func NewMemStore() *MemStore {
     return &MemStore{
-        entries: cache.New(userDuration, purgeInterval),
+        users: []User{},
     }
 }
 
-//Save saves the provided `user` and associated user ID to the store.
-//The `user` parameter is typically a pointer to a struct containing
-//all the data you want to associated with the given user ID.
-func (ms *MemStore) Save(uid bson.ObjectId, user interface{}) error {
-    j, err := json.Marshal(user)
-    if nil != err {
-        return err
+func (ms *MemStore) GetByID(uid bson.ObjectId) (*User, error) {
+    for _, user := range ms.users {
+        if user.ID == uid {
+            return &user, nil
+        }
     }
-    ms.entries.Set(uid.String(), j, cache.DefaultExpiration)
-    return nil
+
+    return nil, ErrUserNotFound
 }
 
-//Get populates `user` with the data previously saved
-//for the given user ID
-// TODO remove
-func (ms *MemStore) Get(uid bson.ObjectId, user interface{}) error {
-    j, found := ms.entries.Get(uid.String())
-    if !found {
-        return ErrUserNotFound
+func (ms *MemStore) GetByEmail(email string) (*User, error) {
+    for _, user := range ms.users {
+        if user.Email == email {
+            return &user, nil
+        }
     }
-    //reset TTL
-    ms.entries.Set(uid.String(), j, 0)
-    return json.Unmarshal(j.([]byte), user)
+
+    return nil, ErrUserNotFound
 }
 
-// TODO
-func (ms *MemStore) GetByID(uid bson.ObjectId) error {
-    ms.entries.Delete(uid.String())
-    return nil
-}
+func (ms *MemStore) GetByUserName(username string) (*User, error) {
+    for _, user := range ms.users {
+        if user.UserName == username {
+            return &user, nil
+        }
+    }
 
-// TODO
-func (ms *MemStore) GetByEmail(email string) error {
-    ms.entries.Delete(email)
-    return nil
-}
-
-// TODO
-func (ms *MemStore) GetByUserName(username string) error {
-    ms.entries.Delete(username)
-    return nil
+    return nil, ErrUserNotFound
 }
 
 //Delete deletes all user data associated with the user ID from the store.
 func (ms *MemStore) Delete(uid bson.ObjectId) error {
-    ms.entries.Delete(uid.String())
-    return nil
+    for index, user := range ms.users {
+        if user.ID == uid {
+            ms.users = append(ms.users[:index], ms.users[index + 1:]...)
+            return nil
+        }
+    }
+
+    return ErrUserNotFound
 }
 
-// TODO
+//Inserts the user data associated with the user ID from the store.
+func (ms *MemStore) Insert(userToInsert *User) (*User, error) {
+    ms.users = append(ms.users, *userToInsert)
+    return userToInsert, nil
+}
+
 func (ms *MemStore) Update(uid bson.ObjectId, updates *Updates) error {
-    return nil
+    for index, user := range ms.users {
+        if user.ID == uid {
+            if updates.FirstName != "" {
+                user.FirstName = updates.FirstName
+            }
+            if updates.LastName != "" {
+                user.LastName = updates.LastName
+            }
+            ms.users[index] = user
+            if user.ID == uid {
+                return nil
+            }
+        }
+    }
+
+    return ErrUserNotFound
 }

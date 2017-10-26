@@ -71,20 +71,16 @@ func (s *MongoStore) getWithFilter(user *User, userFilter *userFilter) (*User, e
 
 // Inserts a new user into the DB
 func (s *MongoStore) Insert(newUser *NewUser) (*User, error) {
-    fmt.Printf("here at the beginning")
     user, err := newUser.ToUser()
     if err != nil {
         return nil, err
     }
-    fmt.Printf("here at the middle")
 
     col := s.session.DB(s.dbName).C(s.colName)
-    fmt.Printf("here at the after the db write")
 
     if err := col.Insert(user); err != nil {
         return nil, fmt.Errorf("error inerting user: %v", err)
     }
-    fmt.Printf("here at the end")
     return user, nil
 }
 
@@ -111,5 +107,6 @@ func (s *MongoStore) Update(userID bson.ObjectId, updates *Updates) error {
 
 // Deletes a user given the user ID
 func (s *MongoStore) Delete(userID bson.ObjectId) error {
+
     return nil
 }
