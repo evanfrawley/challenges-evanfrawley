@@ -41,7 +41,6 @@ func BeginSession(signingKey string, store Store, sessionState interface{}, w ht
 
 	w.Header().Add(headerAuthorization, fmt.Sprintf("%s%s", schemeBearer, sid))
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Session Created"))
 
 	return sid, nil
 }
@@ -93,7 +92,7 @@ func GetState(r *http.Request, signingKey string, store Store, sessionState inte
 
 	err = store.Get(sid, sessionState)
     if err != nil {
-        return InvalidSessionID, ErrStateNotFound
+	    return InvalidSessionID, ErrStateNotFound
     }
 
 	return sid, nil
