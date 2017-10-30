@@ -14,7 +14,7 @@ type Store interface {
 	//GetByID returns the User with the given ID
 	GetByID(id bson.ObjectId) (*User, error)
 
-	//GetByEmail returns the User with the given email
+	//GetByEmail returns the User with the given Email
 	GetByEmail(email string) (*User, error)
 
 	//GetByUserName returns the User with the given Username
