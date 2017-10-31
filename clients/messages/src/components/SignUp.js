@@ -1,7 +1,8 @@
 import React from 'react';
-import {Button, Row, Input} from 'react-materialize';
+import {Button, Input, Row} from 'react-materialize';
+import {withRouter} from 'react-router';
 
-import { signUpNewUser } from '../services/AuthAPIService';
+import {signUpNewUser} from '../services/AuthAPIService';
 
 class SignUp extends React.Component {
 
@@ -16,9 +17,12 @@ class SignUp extends React.Component {
         e.preventDefault();
         console.log(e.target.value);
         signUpNewUser(this.state.newUser)
-          .then((response) => {
-            console.log(response);
-          })
+            .then((response) => {
+                console.log(response);
+            })
+            .then(() => {
+                this.props.history.push('/login')
+            })
     };
 
     _handleChange = (e) => {
@@ -28,15 +32,16 @@ class SignUp extends React.Component {
     };
 
     render() {
-        return(
+        return (
             <div className={"SignUpContainer"}>
                 <Row>
-                    <Input onChange={this._handleChange} name={"firstName"} s={6} label="First Name" />
-                    <Input onChange={this._handleChange} name={"lastName"} s={6} label="Last Name" />
-                    <Input onChange={this._handleChange} name={"username"} label="Username" s={12} />
-                    <Input onChange={this._handleChange} name={"password"} type="password" label="Password" s={12} />
-                    <Input onChange={this._handleChange} name={"passwordConf"} type="password" label="Confirm Password" s={12} />
-                    <Input onChange={this._handleChange} name={"email"} type="email" label="Email" s={12} />
+                    <Input onChange={this._handleChange} name={"firstName"} s={6} label="First Name"/>
+                    <Input onChange={this._handleChange} name={"lastName"} s={6} label="Last Name"/>
+                    <Input onChange={this._handleChange} name={"username"} label="Username" s={12}/>
+                    <Input onChange={this._handleChange} name={"password"} type="password" label="Password" s={12}/>
+                    <Input onChange={this._handleChange} name={"passwordConf"} type="password" label="Confirm Password"
+                           s={12}/>
+                    <Input onChange={this._handleChange} name={"email"} type="email" label="Email" s={12}/>
                     <Button onClick={this._handleSubmit}>Submit!</Button>
                 </Row>
                 <div>
@@ -47,4 +52,4 @@ class SignUp extends React.Component {
     }
 }
 
-export default SignUp
+export default withRouter(SignUp)

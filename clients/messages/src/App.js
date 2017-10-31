@@ -1,46 +1,114 @@
 import React, {Component} from 'react';
 import Login from './components/Login';
 import SignUp from './components/SignUp';
+import Home from './components/Home';
+import Settings from './components/Settings';
 import 'whatwg-fetch';
-import { Switch, Route } from 'react-router'
-
-import * as GoApiService from './services/GoApiService.js';
+import {Switch, Route, withRouter} from 'react-router'
+import * as AuthService from './services/AuthAPIService';
+import {PrivateRoute} from './routing/RoutingHelpers';
+import * as Helpers from './services/APIHelpers';
 
 class App extends Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            summary: null,
-        }
+  constructor(props) {
+    super(props);
+    this.state = {
+      // loggedIn: false,
+      authToken: '',
+      user: {
+        firstName: '',
+        lastName: '',
+      }
     }
+  }
 
-    handleOnSubmit(e) {
-        e.preventDefault();
-        console.log('event target', e.target.url.value);
-        GoApiService.getSummaryResourcePromise(e.target.url.value).then((json) => {
-            this.setState({summary: json})
-        })
+  componentWillMount() {
+    let oneHour = 60 * 60 * 1000;
+    let lastCreated = localStorage.getItem(Helpers.TOKEN_KEY_CREATED);
+    console.log("should be logged in");
+    console.log(lastCreated);
+    console.log(new Date() - new Date(lastCreated));
+    if (new Date() - new Date(lastCreated) < oneHour) {
+      console.log("should be logged in");
+      this.setState({loggedIn: true});
+      this.loadCurrentUserDate();
     }
+  }
 
-    render() {
-        return (
-            <div className="App">
-                <Switch>
-                    <Route exact path='/' component={Home}/>
-                    <Route path='/login' component={Login}/>
-                    <Route path='/signup' component={SignUp}/>
-                </Switch>
-            </div>
-        );
-    }
+  handleLogin = (credentials) => {
+    AuthService.signInUser(credentials).then((response) => {
+      if (response !== '') {
+        this.setState({loggedIn: true, authToken: response})
+      }
+      this.props.history.push('/');
+    }).then(() => {
+      this.loadCurrentUserDate();
+    })
+  };
+
+  loadCurrentUserDate = () => {
+    AuthService.getUser().then((response) => {
+      console.log("should be user", response);
+      this.setState({user: response});
+    })
+  };
+
+  handleSettingsUpdate = (userUpdates) => {
+    AuthService.updateUser(userUpdates)
+      .then((response) => {
+        console.log('updates response', response);
+      })
+  };
+
+  handleSignOut = () => {
+    console.log("signing out");
+    AuthService.signOutUser()
+      .then(() => {
+        this.setState({loggedIn: false})
+      });
+  };
+
+  handleNavigateToSettings = () => {
+    this.props.history.push('/settings')
+  };
+
+
+  render() {
+    console.log(this.state.loggedIn);
+    return (
+      <div className="App">
+        <Switch>
+          <PrivateRoute
+            exact path='/'
+            redirectTo={'/login'}
+            component={Home}
+            authed={this.state.loggedIn}
+            user={this.state.user}
+            handleSignOut={this.handleSignOut}
+            handleNavigateToSettings={this.handleNavigateToSettings}
+          />
+          <Route
+            path='/login'
+            render={routerProps => <Login {...routerProps} handleLogin={this.handleLogin}/>}
+            handleLogin={this.handleLogin}
+          />
+          <Route
+            path='/signup'
+            component={SignUp}
+          />
+          <PrivateRoute
+            path='/settings'
+            redirectTo={'/login'}
+            component={Settings}
+            authed={this.state.loggedIn}
+            user={this.state.user}
+            handleSettingsUpdate={this.handleSettingsUpdate}
+          />
+        </Switch>
+      </div>
+    );
+  }
 }
 
-const Home = () => (
-  <div className="Home">
-      <Login />
-  </div>
-);
-
-
-export default App;
+export default withRouter(App);
