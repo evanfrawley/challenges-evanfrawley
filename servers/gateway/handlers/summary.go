@@ -11,6 +11,7 @@ import (
     "strconv"
     "fmt"
     "net/url"
+    "time"
 )
 
 type OpenGraphPreview struct {
@@ -63,6 +64,7 @@ type PageSummary struct {
 //a JSON-encoded PageSummary struct containing the page summary
 //meta-data.
 func SummaryHandler(w http.ResponseWriter, r *http.Request) {
+
     w.Header().Add(AccessControlAllowOriginKey, AccessControlAllowOriginVal)
     w.Header().Add(ContentTypeKey, ContentTypeJSONUTF8Val)
 

@@ -8,22 +8,6 @@ fi
 export TLSCERT=/etc/letsencrypt/live/${subdomain}.evan.gg/fullchain.pem
 export TLSKEY=/etc/letsencrypt/live/${subdomain}.evan.gg/privkey.pem
 
-# Init Redis store
-docker rm -f redissvr
-docker run -d \
---name redissvr \
---network api-network \
-redis
-
-# Create Mongo network
-
-# Init Mongo store
-docker rm -f mongosvr
-docker run -d \
---name mongosvr \
---network api-network \
-mongo
-
 docker rm -f gateway-api
 docker pull evanfrawley/gateway-api
 docker run -d \
