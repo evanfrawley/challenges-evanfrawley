@@ -11,7 +11,6 @@ import (
     "strconv"
     "fmt"
     "net/url"
-    "time"
 )
 
 type OpenGraphPreview struct {
