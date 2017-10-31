@@ -3,3 +3,7 @@
 .idea
 node_modules
 npm-debug.log
+fullchain.pem
+privkey.pem
+tls/
+coverage.out

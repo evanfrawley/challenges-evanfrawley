@@ -3,6 +3,11 @@ package sessions
 import (
 	"crypto/sha256"
 	"errors"
+	"encoding/base64"
+	"fmt"
+	"crypto/rand"
+	"crypto/hmac"
+    "crypto/subtle"
 )
 
 //InvalidSessionID represents an empty, invalid session ID
@@ -27,41 +32,59 @@ const signedLength = idLength + sha256.Size
 type SessionID string
 
 //ErrInvalidID is returned when an invalid session id is passed to ValidateID()
-var ErrInvalidID = errors.New("Invalid Session ID")
+var ErrInvalidID = errors.New("invalid Session ID")
+var ErrEmptySigningKey = errors.New("signing key is empty")
 
 //NewSessionID creates and returns a new digitally-signed session ID,
 //using `signingKey` as the HMAC signing key. An error is returned only
 //if there was an error generating random bytes for the session ID
 func NewSessionID(signingKey string) (SessionID, error) {
-	//TODO: if `signingKey` is zero-length, return InvalidSessionID
-	//and an error indicating that it may not be empty
+	if len(signingKey) == 0 {
+		return InvalidSessionID, ErrEmptySigningKey
+	}
 
-	//TODO: Generate a new digitally-signed SessionID by doing the following:
-	//- create a byte slice where the first `idLength` of bytes
-	//  are cryptographically random bytes for the new session ID,
-	//  and the remaining bytes are an HMAC hash of those ID bytes,
-	//  using the provided `signingKey` as the HMAC key.
-	//- encode that byte slice using base64 URL Encoding and return
-	//  the result as a SessionID type
+	key := []byte(signingKey)
 
-	//the following return statement is just a placeholder
-	//remove it when implementing the function
-	return InvalidSessionID, nil
+	randomBytes := make([]byte, idLength)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return InvalidSessionID, fmt.Errorf("error creating random bytes with err: %v", err)
+	}
+	h := hmac.New(sha256.New, key)
+	h.Write(randomBytes)
+	hmacRandomBytes := h.Sum(randomBytes)
+	sessionID := SessionID(base64.URLEncoding.EncodeToString(hmacRandomBytes))
+
+	return sessionID, nil
 }
 
 //ValidateID validates the string in the `id` parameter
 //using the `signingKey` as the HMAC signing key
 //and returns an error if invalid, or a SessionID if valid
 func ValidateID(id string, signingKey string) (SessionID, error) {
+    if len(signingKey) == 0 {
+        return InvalidSessionID, ErrEmptySigningKey
+    }
 
-	//TODO: validate the `id` parameter using the provided `signingKey`.
-	//base64 decode the `id` parameter, HMAC hash the
-	//ID portion of the byte slice, and compare that to the
-	//HMAC hash stored in the remaining bytes. If they match,
-	//return the entire `id` parameter as a SessionID type.
-	//If not, return InvalidSessionID and ErrInvalidID.
+    key := []byte(signingKey)
 
-	return InvalidSessionID, ErrInvalidID
+    decodedIdBytes, err := base64.URLEncoding.DecodeString(id)
+    if err != nil {
+        return InvalidSessionID, fmt.Errorf("error decoding sessionID: %v", err)
+    }
+
+    h := hmac.New(sha256.New, key)
+    _, err = h.Write(decodedIdBytes[:idLength])
+    if err != nil {
+    	// TODO
+    	return InvalidSessionID, fmt.Errorf("ran into err: %v", err)
+    }
+    newSigBytes := h.Sum(nil)
+    if subtle.ConstantTimeCompare(newSigBytes, decodedIdBytes[idLength:]) == 1 {
+        return SessionID(id), nil
+    } else {
+        return InvalidSessionID, ErrInvalidID
+    }
 }
 
 //String returns a string representation of the sessionID
