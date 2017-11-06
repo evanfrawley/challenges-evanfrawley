@@ -1,12 +1,12 @@
 package sessions
 
 import (
-	"crypto/sha256"
-	"errors"
-	"encoding/base64"
-	"fmt"
-	"crypto/rand"
-	"crypto/hmac"
+    "crypto/sha256"
+    "errors"
+    "encoding/base64"
+    "fmt"
+    "crypto/rand"
+    "crypto/hmac"
     "crypto/subtle"
 )
 
@@ -39,24 +39,24 @@ var ErrEmptySigningKey = errors.New("signing key is empty")
 //using `signingKey` as the HMAC signing key. An error is returned only
 //if there was an error generating random bytes for the session ID
 func NewSessionID(signingKey string) (SessionID, error) {
-	if len(signingKey) == 0 {
-		return InvalidSessionID, ErrEmptySigningKey
-	}
+    if len(signingKey) == 0 {
+        return InvalidSessionID, ErrEmptySigningKey
+    }
 
-	key := []byte(signingKey)
+    key := []byte(signingKey)
 
-	signature := make([]byte, signedLength)
-	_, err := rand.Read(signature[:idLength])
-	if err != nil {
-		return InvalidSessionID, fmt.Errorf("error creating random bytes with err: %v", err)
-	}
-	h := hmac.New(sha256.New, key)
-	h.Write(signature[:idLength])
-	hmacRandomBytes := h.Sum(nil)
-	copy(signature[idLength:], hmacRandomBytes)
-	sessionID := SessionID(base64.URLEncoding.EncodeToString(signature))
+    signature := make([]byte, signedLength)
+    _, err := rand.Read(signature[:idLength])
+    if err != nil {
+        return InvalidSessionID, fmt.Errorf("error creating random bytes with err: %v", err)
+    }
+    h := hmac.New(sha256.New, key)
+    h.Write(signature[:idLength])
+    hmacRandomBytes := h.Sum(nil)
+    copy(signature[idLength:], hmacRandomBytes)
+    sessionID := SessionID(base64.URLEncoding.EncodeToString(signature))
 
-	return sessionID, nil
+    return sessionID, nil
 }
 
 //ValidateID validates the string in the `id` parameter
@@ -74,15 +74,15 @@ func ValidateID(id string, signingKey string) (SessionID, error) {
     }
 
 
-	if len(decodedIdBytes) != signedLength {
-		return InvalidSessionID, fmt.Errorf("length is not same as signed length: %v", err)
-	}
+    if len(decodedIdBytes) != signedLength {
+        return InvalidSessionID, fmt.Errorf("length is not same as signed length: %v", err)
+    }
 
-	h := hmac.New(sha256.New, key)
+    h := hmac.New(sha256.New, key)
     _, err = h.Write(decodedIdBytes[:idLength])
     if err != nil {
-    	// TODO
-    	return InvalidSessionID, fmt.Errorf("ran into err: %v", err)
+        // TODO
+        return InvalidSessionID, fmt.Errorf("ran into err: %v", err)
     }
     newSigBytes := h.Sum(nil)
     if subtle.ConstantTimeCompare(newSigBytes, decodedIdBytes[idLength:]) == 1 {
@@ -94,5 +94,5 @@ func ValidateID(id string, signingKey string) (SessionID, error) {
 
 //String returns a string representation of the sessionID
 func (sid SessionID) String() string {
-	return string(sid)
+    return string(sid)
 }
