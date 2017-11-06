@@ -45,15 +45,16 @@ func NewSessionID(signingKey string) (SessionID, error) {
 
 	key := []byte(signingKey)
 
-	randomBytes := make([]byte, idLength)
-	_, err := rand.Read(randomBytes)
+	signature := make([]byte, signedLength)
+	_, err := rand.Read(signature[:idLength])
 	if err != nil {
 		return InvalidSessionID, fmt.Errorf("error creating random bytes with err: %v", err)
 	}
 	h := hmac.New(sha256.New, key)
-	h.Write(randomBytes)
-	hmacRandomBytes := h.Sum(randomBytes)
-	sessionID := SessionID(base64.URLEncoding.EncodeToString(hmacRandomBytes))
+	h.Write(signature[:idLength])
+	hmacRandomBytes := h.Sum(nil)
+	copy(signature[idLength:], hmacRandomBytes)
+	sessionID := SessionID(base64.URLEncoding.EncodeToString(signature))
 
 	return sessionID, nil
 }
@@ -67,13 +68,17 @@ func ValidateID(id string, signingKey string) (SessionID, error) {
     }
 
     key := []byte(signingKey)
-
     decodedIdBytes, err := base64.URLEncoding.DecodeString(id)
     if err != nil {
         return InvalidSessionID, fmt.Errorf("error decoding sessionID: %v", err)
     }
 
-    h := hmac.New(sha256.New, key)
+
+	if len(decodedIdBytes) != signedLength {
+		return InvalidSessionID, fmt.Errorf("length is not same as signed length: %v", err)
+	}
+
+	h := hmac.New(sha256.New, key)
     _, err = h.Write(decodedIdBytes[:idLength])
     if err != nil {
     	// TODO

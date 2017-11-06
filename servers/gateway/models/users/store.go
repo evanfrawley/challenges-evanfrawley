@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2"
 )
 
 //ErrUserNotFound is returned when the user can't be found
@@ -19,6 +20,8 @@ type Store interface {
 
 	//GetByUserName returns the User with the given Username
 	GetByUserName(username string) (*User, error)
+
+	GetUserIterator() *mgo.Iter
 
 	//Insert converts the NewUser to a User, inserts
 	//it into the database, and returns it

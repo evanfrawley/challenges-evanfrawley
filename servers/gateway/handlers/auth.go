@@ -10,6 +10,7 @@ import (
 )
 
 //var QueryParamNotFoundError = errors.New("query parameter was not found in request")
+type UsersSlice []*users.User
 
 //UsersHandler handles requests for the /v1/user resource
 func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +35,21 @@ func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
         }
         w.WriteHeader(http.StatusCreated)
         respond(w, user)
+    case "GET":
+        usersSlice := make(UsersSlice, 0, 20)
+        items := ctx.trieRoot.GetUniqueUsersFromPrefix("evan")
+        for _, item := range items {
+            user, err := ctx.userMongoStore.GetByID(item.UserID)
+            if err != nil {
+                // idk if i should return here
+                http.Error(w, fmt.Sprintf("error creating new user: %v", err), http.StatusInternalServerError)
+                return
+            }
+            usersSlice = append(usersSlice, user)
+        }
+
+        w.WriteHeader(http.StatusCreated)
+        respond(w, usersSlice)
     default:
         http.Error(w, "method must be POST", http.StatusMethodNotAllowed)
         return

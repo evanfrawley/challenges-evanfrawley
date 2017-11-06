@@ -9,21 +9,23 @@ package handlers
 import (
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/models/users"
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/sessions"
+    "github.com/info344-a17/challenges-evanfrawley/servers/gateway/indexes"
 )
 
 //Context holds context values
 //used by multiple handler functions.
 type Context struct {
     userMongoStore users.Store
-    sessionsStore sessions.Store
-    signingKey string
+    sessionsStore  sessions.Store
+    signingKey     string
+    trieRoot       *indexes.TrieNode
 }
 
-func NewHandlerContext(userStore users.Store, sessionsStore sessions.Store, signingKey string) *Context {
-    return &Context {
+func NewHandlerContext(userStore users.Store, sessionsStore sessions.Store, signingKey string, trieRoot *indexes.TrieNode) *Context {
+    return &Context{
         userMongoStore: userStore,
-        sessionsStore: sessionsStore,
-        signingKey: signingKey,
+        sessionsStore:  sessionsStore,
+        signingKey:     signingKey,
+        trieRoot:       trieRoot,
     }
 }
-

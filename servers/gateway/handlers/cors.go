@@ -28,6 +28,7 @@ func (c *CORS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     w.Header().Add(AccessControlAllowHeadersKey, AccessControlAllowHeadersVal)
     w.Header().Add(AccessControlExposeHeadersKey, AccessControlExposeHeadersVal)
     w.Header().Add(AccessControlMaxAgeKey, AccessControlMaxAgeVal)
+    w.Header().Add(ContentTypeKey, ContentTypeJSONUTF8Val)
     //...more CORS response headers...
 
     //if this is preflight request, the method will

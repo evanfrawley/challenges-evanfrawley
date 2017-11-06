@@ -105,8 +105,16 @@ func (s *MongoStore) Update(userID bson.ObjectId, updates *Updates) error {
     return nil
 }
 
+func (s *MongoStore) GetUserIterator() *mgo.Iter {
+    col := s.session.DB(s.dbName).C(s.colName)
+    return col.Find(nil).Iter()
+}
+
 // Deletes a user given the user ID
 func (s *MongoStore) Delete(userID bson.ObjectId) error {
-
+    col := s.session.DB(s.dbName).C(s.colName)
+    if err := col.Remove(&userFilter{ID: userID}); err != nil {
+        return fmt.Errorf("error removing %v from collection: %v", userID, err)
+    }
     return nil
 }
