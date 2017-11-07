@@ -37,7 +37,8 @@ func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
         respond(w, user)
     case "GET":
         usersSlice := make(UsersSlice, 0, 20)
-        items := ctx.trieRoot.GetUniqueUsersFromPrefix("evan")
+        queryParam := r.URL.Query().Get("q")
+        items := ctx.trieRoot.GetUniqueUsersFromPrefix(queryParam)
         for _, item := range items {
             user, err := ctx.userMongoStore.GetByID(item.UserID)
             if err != nil {

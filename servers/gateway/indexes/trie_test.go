@@ -57,11 +57,11 @@ func TestTrieNodeInsert(t *testing.T) {
 
     for _, c := range insertCases {
         root.InsertUser(&c.user)
-        items := root.FindCompletedItemsWithPrefix(c.user.Email)
+        items := root.findCompletedItemsWithPrefix(c.user.Email)
         if len(items) != c.emailSize {
             t.Errorf("%s:\nemail size did not match.\nGOT: %v\nEXPECTED: %v\n", c.name, len(items), c.emailSize)
         }
-        items = root.FindCompletedItemsWithPrefix(c.prefix)
+        items = root.findCompletedItemsWithPrefix(c.prefix)
         if len(items) != c.prefixSize {
             t.Errorf("%s:\nprefix size did not match.\nGOT: %v\nEXPECTED: %v\n", c.name, len(items), c.prefixSize)
         }
@@ -117,7 +117,7 @@ func TestTrieNodeDeleteKey(t *testing.T) {
     for _, c := range cases {
         root.InsertUser(&c.user)
         root.DeleteKey(c.keyToDelete, c.user.ID)
-        items := root.FindCompletedItemsWithPrefix(c.keyToDelete)
+        items := root.findCompletedItemsWithPrefix(c.keyToDelete)
         if len(items) != 0 {
             t.Errorf("%s:\nexpected items to be empty, but got size: %v", c.name, len(items))
         }

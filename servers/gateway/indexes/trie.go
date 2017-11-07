@@ -6,6 +6,7 @@ import (
 
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/models/users"
     "errors"
+    "strings"
 )
 
 const (
@@ -26,19 +27,20 @@ type TrieNode struct {
 }
 
 type CompletedItem struct {
-    Val    string        `json:"val,omitempty"`
+    //Val    string        `json:"val,omitempty"`
     Type   string        `json:"type,omitempty"`
     UserID bson.ObjectId `json:"userId,omitempty"`
 }
 
 func (n *TrieNode) InsertUser(user *users.User) {
-    n.InsertItem(user.FirstName, user.FirstName, FirstName, user)
-    n.InsertItem(user.LastName, user.LastName, LastName, user)
-    n.InsertItem(user.Email, user.Email, Email, user)
-    n.InsertItem(user.UserName, user.UserName, UserName, user)
+    n.InsertItem(strings.ToLower(user.FirstName), FirstName, user)
+    n.InsertItem(strings.ToLower(user.LastName), LastName, user)
+    n.InsertItem(strings.ToLower(user.Email), Email, user)
+    n.InsertItem(strings.ToLower(user.UserName), UserName, user)
 }
 
-func (n *TrieNode) InsertItem(baseString, currentString, stringType string, u *users.User) {
+//func (n *TrieNode) InsertItem(baseString, currentString, stringType string, u *users.User) {
+func (n *TrieNode) InsertItem(currentString, stringType string, u *users.User) {
     if len(currentString) == 0 {
         return
     }
@@ -60,7 +62,7 @@ func (n *TrieNode) InsertItem(baseString, currentString, stringType string, u *u
     if len(currentString) == 1 {
         // Case when we've reached the end of the string and just added the last rune to the children
         completedItem := &CompletedItem{
-            Val:    baseString,
+            //Val:    baseString,
             Type:   stringType,
             UserID: u.ID,
         }
@@ -68,16 +70,19 @@ func (n *TrieNode) InsertItem(baseString, currentString, stringType string, u *u
     } else {
         // Otherwise, pass down the string without the first element down the chain
         restOfString := currentString[1:]
-        nextNode.InsertItem(baseString, restOfString, stringType, u)
+        nextNode.InsertItem(restOfString, stringType, u)
+        //nextNode.InsertItem(baseString, restOfString, stringType, u)
     }
 }
 
-func (n *TrieNode) FindCompletedItemsWithPrefix(prefix string) []CompletedItem {
+func (n *TrieNode) findCompletedItemsWithPrefix(prefix string) []CompletedItem {
     var completedItems []CompletedItem
     // not really sure if this is the right logic here
     targetNode, err := n.getTargetNode(prefix)
+
     if err != nil {
         // if not found, return an empty array
+        fmt.Printf("getting an error: %v\n", err)
         return completedItems
     }
 
@@ -86,12 +91,13 @@ func (n *TrieNode) FindCompletedItemsWithPrefix(prefix string) []CompletedItem {
     return completedItems
 }
 
-func (n *TrieNode) GetUniqueUsersFromPrefix(prefix string) []*CompletedItem {
-    items := n.FindCompletedItemsWithPrefix(prefix)
-    var ci []*CompletedItem
-    idToCompletedItemMap := map[bson.ObjectId]*CompletedItem{}
+func (n *TrieNode) GetUniqueUsersFromPrefix(prefix string) []CompletedItem {
+    prefix = strings.ToLower(prefix)
+    items := n.findCompletedItemsWithPrefix(prefix)
+    var ci []CompletedItem
+    idToCompletedItemMap := map[bson.ObjectId]CompletedItem{}
     for _, item := range items {
-        idToCompletedItemMap[item.UserID] = &item
+        idToCompletedItemMap[item.UserID] = item
     }
     for _, val := range idToCompletedItemMap {
         // ensures that the items returned are unique
@@ -136,7 +142,7 @@ func (n *TrieNode) DeleteUser(user *users.User) error {
     // 4. not in the trie
 
     // first, check to see if the user is indeed within the trie
-    items := n.FindCompletedItemsWithPrefix(user.Email)
+    items := n.findCompletedItemsWithPrefix(user.Email)
     if len(items) == 0 {
         return fmt.Errorf("error: user was not found in the trie")
     }

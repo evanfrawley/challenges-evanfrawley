@@ -14,8 +14,8 @@ type userFilter struct {
 
 type userUpdateDoc struct {
     PassHash string `bson:"-,omitempty"`
-    FirstName string `bson:"firstName,omitempty"`
-    LastName string `bson:"lastName,omitempty"`
+    FirstName string `bson:"firstname,omitempty"`
+    LastName string `bson:"lastname,omitempty"`
     Email string `bson:"email,omitempty"`
     Username string `bson:"username,omitempty"`
 }

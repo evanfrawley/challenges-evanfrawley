@@ -19,9 +19,9 @@ type User struct {
     Email     string        `json:"email" bson:"email"`
     PassHash  []byte        `json:"-"` //stored, but not encoded to clients
     UserName  string        `json:"username" bson:"username"`
-    FirstName string        `json:"firstName" bson:"firstName"`
-    LastName  string        `json:"lastName" bson:"lastName"`
-    PhotoURL  string        `json:"photoURL" bson:"photoURL"`
+    FirstName string        `json:"firstname" bson:"firstname"`
+    LastName  string        `json:"lastname" bson:"lastname"`
+    PhotoURL  string        `json:"photourl" bson:"photourl"`
 }
 
 //Credentials represents user sign-in credentials
@@ -34,16 +34,16 @@ type Credentials struct {
 type NewUser struct {
     Email        string `json:"email"`
     Password     string `json:"password"`
-    PasswordConf string `json:"passwordConf"`
+    PasswordConf string `json:"passwordconf"`
     UserName     string `json:"username"`
-    FirstName    string `json:"firstName"`
-    LastName     string `json:"lastName"`
+    FirstName    string `json:"firstname" bson:"firstname"`
+    LastName     string `json:"lastname" bson:"lastname"`
 }
 
 //Updates represents allowed updates to a user profile
 type Updates struct {
-    FirstName string `json:"firstName" bson:"firstName"`
-    LastName  string `json:"lastName" bson:"lastName"`
+    FirstName string `json:"firstname" bson:"firstname"`
+    LastName  string `json:"lastname" bson:"lastname"`
 }
 
 //Validate validates the new user and returns an error if
