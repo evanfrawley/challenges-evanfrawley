@@ -7,10 +7,11 @@ import (
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/models/users"
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/sessions"
     "time"
+    "sort"
+    "strings"
 )
 
 //var QueryParamNotFoundError = errors.New("query parameter was not found in request")
-type UsersSlice []*users.User
 
 //UsersHandler handles requests for the /v1/user resource
 func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +37,7 @@ func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusCreated)
         respond(w, user)
     case "GET":
-        usersSlice := make(UsersSlice, 0, 20)
+        var usersSlice []*users.User
         queryParam := r.URL.Query().Get("q")
         items := ctx.trieRoot.GetUniqueUsersFromPrefix(queryParam)
         for _, item := range items {
@@ -48,7 +49,12 @@ func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
             }
             usersSlice = append(usersSlice, user)
         }
-
+        sort.Slice(usersSlice[:], func(i, j int) bool {
+            return strings.Compare(string(usersSlice[i].ID), string(usersSlice[j].ID)) == 1
+        })
+        if len(usersSlice) > 20 {
+            usersSlice = usersSlice[:20]
+        }
         w.WriteHeader(http.StatusCreated)
         respond(w, usersSlice)
     default:

@@ -5,7 +5,6 @@ import (
     "gopkg.in/mgo.v2/bson"
 
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/models/users"
-    "errors"
     "strings"
 )
 
@@ -16,8 +15,6 @@ const (
     UserName  = "username"
     Email     = "email"
 )
-
-var KeyNotFound = errors.New("key not found in trie")
 
 type TrieNode struct {
     Data           rune
@@ -116,7 +113,7 @@ func (n *TrieNode) getTargetNode(key string) (*TrieNode, error) {
         nextNode, found := targetNode.NextNodes[runeKey]
         // if the prefix does not exist in the trie, return the empty items slice
         if !found {
-            return nil, KeyNotFound
+            return nil, fmt.Errorf("key: \"%v\" not found in trie", string(runeKey))
         }
         targetNode = nextNode
     }

@@ -14,9 +14,9 @@ class Home extends React.Component {
         </div>
         <div>
           <p>here is your current user information:</p>
-          <img src={this.props.user.photoURL}/>
-          <p>First Name: {this.props.user.firstName}</p>
-          <p>Last Name: {this.props.user.lastName}</p>
+          <img src={this.props.user.photourl}/>
+          <p>First Name: {this.props.user.firstname}</p>
+          <p>Last Name: {this.props.user.lastname}</p>
           <p>Email: {this.props.user.email}</p>
           <p>Username: {this.props.user.username}</p>
         </div>
