@@ -27,11 +27,7 @@ class App extends Component {
     componentWillMount() {
         let oneHour = 60 * 60 * 1000;
         let lastCreated = localStorage.getItem(Helpers.TOKEN_KEY_CREATED);
-        console.log("should be logged in");
-        console.log(lastCreated);
-        console.log(new Date() - new Date(lastCreated));
         if (new Date() - new Date(lastCreated) < oneHour) {
-            console.log("should be logged in");
             this.setState({loggedIn: true});
             this.loadCurrentUserDate();
         }
@@ -50,7 +46,6 @@ class App extends Component {
 
     loadCurrentUserDate = () => {
         AuthService.getUser().then((response) => {
-            console.log("should be user", response);
             this.setState({user: response});
         })
     };
@@ -58,12 +53,10 @@ class App extends Component {
     handleSettingsUpdate = (userUpdates) => {
         AuthService.updateUser(userUpdates)
             .then((response) => {
-                console.log('updates response', response);
             })
     };
 
     handleSignOut = () => {
-        console.log("signing out");
         AuthService.signOutUser()
             .then(() => {
                 this.setState({loggedIn: false})
