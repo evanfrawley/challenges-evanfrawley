@@ -33,13 +33,11 @@ export const signInUser = (credentials) => {
         method: Helpers.METHOD_POST,
         body: JSON.stringify(credentials),
     };
-    console.log("request package", requestPackage);
     return fetch(signInUserPath, requestPackage)
         .then((response) => {
             let token = '';
             if (response.status < 300) {
                 token = response.headers.get("Authorization");
-                console.log("setting shit");
                 localStorage.setItem(Helpers.TOKEN_KEY, token);
                 localStorage.setItem(Helpers.TOKEN_KEY_CREATED, new Date().toString());
             }
@@ -51,7 +49,6 @@ export const signInUser = (credentials) => {
 };
 
 export const signOutUser = () => {
-    console.log("singing out too");
     localStorage.removeItem(Helpers.TOKEN_KEY_CREATED);
     localStorage.removeItem(Helpers.TOKEN_KEY);
     let signOutPath = `${Helpers.API_PATH}${Helpers.SESSIONS_PATH_MINE}`;
@@ -61,7 +58,6 @@ export const signOutUser = () => {
             "Authorization": localStorage.getItem(Helpers.TOKEN_KEY)
         }
     };
-    console.log("request package", requestPackage);
     return fetch(signOutPath, requestPackage)
         .then((response) => {
             if (response.status < 300) {
@@ -75,7 +71,6 @@ export const signOutUser = () => {
 };
 
 export const getUser = () => {
-    console.log("getting user data");
     let userPath = `${Helpers.API_PATH}${Helpers.USERS_ME_PATH}`;
     let requestPackage = {
         method: "GET",
@@ -85,7 +80,6 @@ export const getUser = () => {
     };
     return fetch(userPath, requestPackage)
         .then((response) => {
-            console.log(response);
             if (response.status < 300) {
                 return response.json()
             }
@@ -98,7 +92,6 @@ export const getUser = () => {
 
 export const updateUser = (userSettingsUpdates) => {
     let userPath = `${Helpers.API_PATH}${Helpers.USERS_ME_PATH}`;
-    console.log('update Obj:', userSettingsUpdates);
     let requestPackage = {
         method: "PATCH",
         body: JSON.stringify(userSettingsUpdates),
@@ -126,7 +119,6 @@ export const getUsersFromPrefix = (prefix) => {
             "Authorization": localStorage.getItem(Helpers.TOKEN_KEY)
         }
     };
-    console.log("path:", userPath);
     return fetch(userPath, requestPackage)
         .then((response) => {
             if (response.status < 300) {

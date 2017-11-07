@@ -1,5 +1,6 @@
-// export const API_PATH = "https://api.evan.gg";
-export const API_PATH = "http://localhost:4000";
+// export const API_PATH = "";
+console.log("env", process.env.NODE_ENV);
+export const API_PATH = process.env.NODE_ENV === 'development' ? "http://localhost:4000" : "https://api.evan.gg";
 export const USERS_PATH = "/v1/users";
 export const USERS_ME_PATH = `${USERS_PATH}/me`;
 export const SUMMARY_PATH = "/v1/summary";

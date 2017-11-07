@@ -15,11 +15,7 @@ class SignUp extends React.Component {
 
     _handleSubmit = (e) => {
         e.preventDefault();
-        console.log(e.target.value);
         signUpNewUser(this.state.newUser)
-            .then((response) => {
-                console.log(response);
-            })
             .then(() => {
                 this.props.history.push('/login')
             })

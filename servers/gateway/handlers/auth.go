@@ -54,6 +54,8 @@ func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
         })
         if len(usersSlice) > 20 {
             usersSlice = usersSlice[:20]
+        } else if len(usersSlice) == 0 {
+            usersSlice = make([]*users.User, 0)
         }
         w.WriteHeader(http.StatusCreated)
         respond(w, usersSlice)

@@ -17,4 +17,4 @@ dropletIp=$(
 source /Users/evanfrawley/go/src/github.com/info344-a17/challenges-evanfrawley/servers/gateway/scripts/build.sh
 docker push evanfrawley/gateway-api
 
-ssh -oStrictHostKeyChecking=no root@${dropletIp} 'bash -s' < /Users/evanfrawley/go/src/github.com/info344-a17/challenges-evanfrawley/servers/gateway/scriptsrun.sh ${dropletName}
+ssh -oStrictHostKeyChecking=no root@${dropletIp} 'bash -s' < /Users/evanfrawley/go/src/github.com/info344-a17/challenges-evanfrawley/servers/gateway/scripts/run.sh ${dropletName}

@@ -20,27 +20,37 @@ func main() {
     if len(localAddr) == 0 {
         localAddr = ":433"
     }
+    env := os.Getenv("GO_ENV")
+
     signingKey := "thisissimplysigning"
 
-    //tlsKeyPath := os.Getenv("TLSKEY")
-    //tlsCertPath := os.Getenv("TLSCERT")
+    tlsKeyPath := os.Getenv("TLSKEY")
+    tlsCertPath := os.Getenv("TLSCERT")
 
     fmt.Printf("Go port: %s \n", localAddr)
     mux := http.NewServeMux()
 
+
+    var mongoSession *mgo.Session
+    var redisAddr string
+    var err error
+    if env == "development" {
+        mongoSession, err = mgo.Dial("localhost")
+        redisAddr = "localhost:6379"
+    } else {
+        mongoSession, err = mgo.Dial("mongosvr")
+        redisAddr = "redissvr:6379"
+    }
+    if err != nil {
+        log.Fatalf("error dialing mongo: %v", err)
+    }
+
     client := redis.NewClient(&redis.Options{
-        //Addr:     "redissvr:6379",
-        Addr:     "localhost:6379",
+        Addr:     redisAddr,
         Password: "", // no password set
         DB:       0,  // use default DB
     })
     sessionStore := sessions.NewRedisStore(client, time.Hour)
-
-    mongoSession, err := mgo.Dial("localhost")
-    //mongoSession, err := mgo.Dial("mongosvr")
-    if err != nil {
-        log.Fatalf("error dialing mongo: %v", err)
-    }
 
     mongoStore := users.NewMongoStore(mongoSession, "users", "users")
 
@@ -57,6 +67,9 @@ func main() {
     wrappedMux := handlers.NewCORS(mux)
 
     fmt.Printf("server is listening at http://%s \n", localAddr)
-    log.Fatal(http.ListenAndServe(localAddr, wrappedMux))
-    //log.Fatal(http.ListenAndServeTLS(localAddr, tlsCertPath, tlsKeyPath, wrappedMux))
+    if env == "development" {
+        log.Fatal(http.ListenAndServe(localAddr, wrappedMux))
+    } else {
+        log.Fatal(http.ListenAndServeTLS(localAddr, tlsCertPath, tlsKeyPath, wrappedMux))
+    }
 }

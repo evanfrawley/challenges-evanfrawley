@@ -73,7 +73,7 @@ func (n *TrieNode) InsertItem(currentString, stringType string, u *users.User) {
 }
 
 func (n *TrieNode) findCompletedItemsWithPrefix(prefix string) []CompletedItem {
-    var completedItems []CompletedItem
+    completedItems := make([]CompletedItem, 0, 1)
     // not really sure if this is the right logic here
     targetNode, err := n.getTargetNode(prefix)
 

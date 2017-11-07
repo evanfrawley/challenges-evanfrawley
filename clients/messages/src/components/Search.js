@@ -15,6 +15,7 @@ class Search extends React.Component {
 
     triggerSearch = (prefix) => {
         getUsersFromPrefix(prefix).then((response) => {
+            console.log('resp', response);
             this.setState({foundUsers: response})
         })
     };
@@ -26,16 +27,20 @@ class Search extends React.Component {
     };
 
     render() {
-        let searchResults = this.state.foundUsers.map((item) => {
-            return (
-                <li key={item.id}>
-                    <img src={item.photourl} />
-                    <span>{`${item.firstname} ${item.lastname}`}</span>
-                    <span>{item.username}</span>
-                    <span>{item.email}</span>
-                </li>
-            )
-        });
+
+        let searchResults = [];
+        if (this.state.foundUsers) {
+            searchResults = this.state.foundUsers.map((item) => {
+                return (
+                    <li key={item.id}>
+                        <img src={item.photourl} />
+                        <span>{`${item.firstname} ${item.lastname}`}</span>
+                        <span>{item.username}</span>
+                        <span>{item.email}</span>
+                    </li>
+                )
+            });
+        }
         return (
             <div>
                 <div>
