@@ -7,4 +7,4 @@ fullchain.pem
 privkey.pem
 tls/
 coverage.out
-build
+build/

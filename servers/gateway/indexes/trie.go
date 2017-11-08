@@ -6,6 +6,7 @@ import (
 
     "github.com/info344-a17/challenges-evanfrawley/servers/gateway/models/users"
     "strings"
+    "sync"
 )
 
 const (
@@ -21,6 +22,7 @@ type TrieNode struct {
     CompletedItems []*CompletedItem
     NextNodes      map[rune]*TrieNode
     Parent         *TrieNode
+    mx             sync.RWMutex
 }
 
 type CompletedItem struct {
@@ -38,6 +40,7 @@ func (n *TrieNode) InsertUser(user *users.User) {
 
 //func (n *TrieNode) InsertItem(baseString, currentString, stringType string, u *users.User) {
 func (n *TrieNode) InsertItem(currentString, stringType string, u *users.User) {
+    n.mx.Lock()
     if len(currentString) == 0 {
         return
     }
@@ -70,6 +73,7 @@ func (n *TrieNode) InsertItem(currentString, stringType string, u *users.User) {
         nextNode.InsertItem(restOfString, stringType, u)
         //nextNode.InsertItem(baseString, restOfString, stringType, u)
     }
+    n.mx.Unlock()
 }
 
 func (n *TrieNode) findCompletedItemsWithPrefix(prefix string) []CompletedItem {
@@ -89,6 +93,8 @@ func (n *TrieNode) findCompletedItemsWithPrefix(prefix string) []CompletedItem {
 }
 
 func (n *TrieNode) GetUniqueUsersFromPrefix(prefix string) []CompletedItem {
+    n.mx.RLock()
+    defer n.mx.RUnlock()
     prefix = strings.ToLower(prefix)
     items := n.findCompletedItemsWithPrefix(prefix)
     var ci []CompletedItem
@@ -113,6 +119,7 @@ func (n *TrieNode) getTargetNode(key string) (*TrieNode, error) {
         nextNode, found := targetNode.NextNodes[runeKey]
         // if the prefix does not exist in the trie, return the empty items slice
         if !found {
+            //n.mx.RUnlock()
             return nil, fmt.Errorf("key: \"%v\" not found in trie", string(runeKey))
         }
         targetNode = nextNode
@@ -139,10 +146,12 @@ func (n *TrieNode) DeleteUser(user *users.User) error {
     // 4. not in the trie
 
     // first, check to see if the user is indeed within the trie
+    n.mx.RLock()
     items := n.findCompletedItemsWithPrefix(user.Email)
     if len(items) == 0 {
         return fmt.Errorf("error: user was not found in the trie")
     }
+    n.mx.RUnlock()
 
     // now we know that the user is in the trie
     n.DeleteKey(user.FirstName, user.ID)
@@ -154,8 +163,10 @@ func (n *TrieNode) DeleteUser(user *users.User) error {
 }
 
 func (n *TrieNode) DeleteKey(key string, userIDToDelete bson.ObjectId) error {
+    n.mx.Lock()
     targetNode, err := n.getTargetNode(key)
     if err != nil {
+        n.mx.Unlock()
         return err
     }
 
@@ -168,6 +179,7 @@ func (n *TrieNode) DeleteKey(key string, userIDToDelete bson.ObjectId) error {
             } else if len(targetNode.CompletedItems) == 1 && targetNode.CompletedItems[0].UserID == userIDToDelete {
                 targetNode.CompletedItems = []*CompletedItem{}
             } else {
+                n.mx.Unlock()
                 return fmt.Errorf("tried to delete a user that was not part of the trie")
             }
         }
@@ -188,5 +200,6 @@ func (n *TrieNode) DeleteKey(key string, userIDToDelete bson.ObjectId) error {
         }
     }
 
+    n.mx.Unlock()
     return nil
 }

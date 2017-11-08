@@ -1,1 +1,0 @@
-{"version":3,"sources":["styles/css/index.css"],"names":[],"mappings":"AAAA,2CACE,WAAa","file":"static/css/main.b976f8aa.css","sourcesContent":[".App .SignUpContainer, .App .LoginContainer {\n  width: 300px; }\n\n\n\n// WEBPACK FOOTER //\n// ./src/styles/css/index.css"],"sourceRoot":""}
