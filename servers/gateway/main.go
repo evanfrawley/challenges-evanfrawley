@@ -16,7 +16,7 @@ import (
 
 //main is the main entry point for the server
 func main() {
-    localAddr := os.Getenv("GO_ADDR")
+    localAddr := os.Getenv("GOADDR")
     if len(localAddr) == 0 {
         localAddr = ":433"
     }
@@ -35,7 +35,7 @@ func main() {
     var redisAddr string
     var err error
     if env == "development" {
-        mongoSession, err = mgo.Dial("localhost")
+        mongoSession, err = mgo.Dial("localhost:27017")
         redisAddr = "localhost:6379"
     } else {
         mongoSession, err = mgo.Dial("mongosvr")
@@ -52,7 +52,7 @@ func main() {
     })
     sessionStore := sessions.NewRedisStore(client, time.Hour)
 
-    mongoStore := users.NewMongoStore(mongoSession, "users", "users")
+    mongoStore := users.NewMongoStore(mongoSession, "info344", "users")
 
     trieRoot := handlers.ConstructUsersTrie(mongoStore)
 

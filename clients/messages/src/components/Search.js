@@ -15,7 +15,6 @@ class Search extends React.Component {
 
     triggerSearch = (prefix) => {
         getUsersFromPrefix(prefix).then((response) => {
-            console.log('resp', response);
             this.setState({foundUsers: response})
         })
     };

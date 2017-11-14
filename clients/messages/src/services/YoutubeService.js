@@ -6,7 +6,6 @@ const YOUTUBE_URL_V_RESOURCE = "^https?://(www.)?youtube.com/v/.+";
 const YOUTUBE_URL = "^https?://(www.)?youtube.com.+";
 
 export function getEmbedYoutubeUrl(rawUrl) {
-    console.log('raw', rawUrl);
     if (rawUrl.match(YOUTUBE_URL)) {
         if (rawUrl.match(YOUTUBE_EMBED_URL_REGEX)) {
             // yay! we're already there
@@ -18,9 +17,7 @@ export function getEmbedYoutubeUrl(rawUrl) {
                 let idParam = queryParams.filter((param) => {
                     return param.startsWith("v=");
                 });
-                console.log('idparam', idParam);
                 let id = idParam.replace("v=", "");
-                console.log('id', id);
                 return `http://youtube.com/embed/${id}`;
             } else if (rawUrl.match(YOUTUBE_URL_V_RESOURCE)) {
                 // snag from youtube.com/v/{id}
@@ -34,9 +31,7 @@ export function getEmbedYoutubeUrl(rawUrl) {
 
 export function createEmbedVideoArray(videos) {
     return videos.map((video) => {
-        console.log(video);
         let cleanVideoUrl = getEmbedYoutubeUrl(video.url);
-        console.log('clean', cleanVideoUrl);
         if (video.type) {
             if (video.type === "text/html") {
                 return (
