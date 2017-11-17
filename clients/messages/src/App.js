@@ -39,7 +39,7 @@ class App extends Component {
     let lastCreated = localStorage.getItem(Helpers.TOKEN_KEY_CREATED);
     if (new Date() - new Date(lastCreated) < oneHour) {
       this.setState({loggedIn: true});
-      this.loadCurrentUserDate();
+      this.loadCurrentUserData();
     }
   }
 
@@ -50,26 +50,35 @@ class App extends Component {
       }
       this.props.history.push('/');
     }).then(() => {
-      this.loadCurrentUserDate();
+      this.loadCurrentUserData();
+    }).catch((error) => {
+        console.error('error when logging in user', error);
+        AuthService.removeLocalStorage();
+        this.props.history.push('/');
     })
   };
 
-  loadCurrentUserDate = () => {
+  loadCurrentUserData = () => {
     AuthService.getUser().then((response) => {
       this.setState({user: response});
+    }).catch((error) => {
+        console.error('error when logging in user', error);
+        this.props.history.push('/');
     })
   };
 
   handleSettingsUpdate = (userUpdates) => {
     AuthService.updateUser(userUpdates)
       .then((response) => {
+
       })
   };
 
   handleSignOut = () => {
     AuthService.signOutUser()
       .then(() => {
-        this.setState({loggedIn: false})
+        this.setState({loggedIn: false});
+        AuthService.removeLocalStorage();
       });
   };
 
@@ -77,11 +86,10 @@ class App extends Component {
     this.props.history.push('/settings')
   };
 
-
   render() {
     return (
       <div className="App">
-        <Navbar brand='logo' right>
+        <Navbar brand='Messages' right>
           <NavItem href='/messaging'>Messaging</NavItem>
           <NavItem href='/login'>Login</NavItem>
         </Navbar>
@@ -116,6 +124,14 @@ class App extends Component {
             path='/search'
             redirectTo={'/login'}
             component={Search}
+            authed={this.state.loggedIn}
+            user={this.state.user}
+            handleSettingsUpdate={this.handleSettingsUpdate}
+          />
+          <PrivateRoute
+            path='/messaging/:channelID'
+            redirectTo={'/login'}
+            component={Messaging}
             authed={this.state.loggedIn}
             user={this.state.user}
             handleSettingsUpdate={this.handleSettingsUpdate}

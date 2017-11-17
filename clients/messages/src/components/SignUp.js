@@ -37,7 +37,7 @@ class SignUp extends React.Component {
                     <Input onChange={this._handleChange} name={"password"} type="password" label="Password" s={12}/>
                     <Input onChange={this._handleChange} name={"passwordconf"} type="password" label="Confirm Password" s={12}/>
                     <Input onChange={this._handleChange} name={"email"} type="email" label="Email" s={12}/>
-                    <Button onClick={this._handleSubmit}>Submit!</Button>
+                    <Button onClick={this._handleSubmit}>Sign Up</Button>
                 </Row>
                 <div>
                     <p>Already have an account? <a href={"/login"}>Log in now!</a></p>

@@ -5,7 +5,6 @@ import {withRouter} from 'react-router';
 class Home extends React.Component {
 
   render() {
-    console.log(this.props.user);
     return (
       <div>
         <div>
@@ -14,7 +13,7 @@ class Home extends React.Component {
         </div>
         <div>
           <p>here is your current user information:</p>
-          <img src={this.props.user.photourl || ''}/>
+          <img alt={`${this.props.user.firstname} ${this.props.user.lastname}`} src={this.props.user.photourl || ''}/>
           <p>First Name: {this.props.user.firstname}</p>
           <p>Last Name: {this.props.user.lastname}</p>
           <p>Email: {this.props.user.email}</p>

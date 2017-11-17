@@ -1,5 +1,4 @@
 import React from 'react';
-import {Button} from 'react-materialize';
 import {withRouter} from 'react-router';
 
 class NoMatch extends React.Component {

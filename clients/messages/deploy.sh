@@ -14,5 +14,5 @@ dropletIp=$(
         '.[] as $i | $i.name | scan($n) | $i.networks.v4[0].ip_address'
 )
 
-docker push evanfrawley/chat-client
+
 ssh -oStrictHostKeyChecking=no root@${dropletIp} 'bash -s' < run.sh

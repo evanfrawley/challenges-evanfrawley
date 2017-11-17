@@ -10,7 +10,7 @@ const xhrConstants = require('./xhr-constants');
 
 const mongoAddr = process.env.DBADDR || "localhost:27017";
 const messagingResoruce = messagingRoutes.APP_NAME;
-const mongoURL = `mongodb://devmongo/${messagingResoruce}`;
+const mongoURL = `mongodb://${mongoAddr}/${messagingResoruce}`;
 console.log("attempting to connect to mongo at: %s", mongoURL);
 
 module.exports = (async () => {

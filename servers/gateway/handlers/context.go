@@ -17,7 +17,7 @@ import (
 type Context struct {
     userMongoStore users.Store
     sessionsStore  sessions.Store
-    signingKey     string
+    SigningKey     string
     trieRoot       *indexes.TrieNode
 }
 
@@ -25,7 +25,7 @@ func NewHandlerContext(userStore users.Store, sessionsStore sessions.Store, sign
     return &Context{
         userMongoStore: userStore,
         sessionsStore:  sessionsStore,
-        signingKey:     signingKey,
+        SigningKey:     signingKey,
         trieRoot:       trieRoot,
     }
 }

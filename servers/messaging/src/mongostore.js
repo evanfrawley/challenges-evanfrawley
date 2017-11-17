@@ -59,7 +59,7 @@ class MongoStore {
   }
 
   getAll() {
-    return this.collection.find({deleted: false})
+    return this.collection.find()
       .limit(DEFAULT_GET_ALL_LIMIT)
       .toArray();
   }

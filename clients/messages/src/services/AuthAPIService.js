@@ -38,6 +38,7 @@ export const signInUser = (credentials) => {
             let token = '';
             if (response.status < 300) {
                 token = response.headers.get("Authorization");
+
                 localStorage.setItem(Helpers.TOKEN_KEY, token);
                 localStorage.setItem(Helpers.TOKEN_KEY_CREATED, new Date().toString());
             }
@@ -67,6 +68,7 @@ export const signOutUser = () => {
         })
         .catch((error) => {
             console.error(`Ran into error signing out: ${error}`);
+            return error;
         })
 };
 
@@ -83,10 +85,12 @@ export const getUser = () => {
             if (response.status < 300) {
                 return response.json()
             }
-            throw new Error(`Fetch failed: status code recieved was: ${response.status}`)
+            throw new Error(`Fetch failed: status code received was: ${response.status}`)
         })
         .catch((error) => {
-            console.error(`Ran into error signing out: ${error}`);
+            console.error(`Ran into error getting user data: ${error}`);
+            throw error;
+            // return error;
         })
 };
 
@@ -107,7 +111,7 @@ export const updateUser = (userSettingsUpdates) => {
             throw new Error(`Fetch failed. Error updating user. Status code was: ${response.status}`);
         })
         .catch((error) => {
-            console.log(`error updating user: ${error}`);
+            console.error(`error updating user: ${error}`);
         });
 };
 
@@ -127,6 +131,11 @@ export const getUsersFromPrefix = (prefix) => {
             throw new Error(`Fetch failed. Error updating user. Status code was: ${response.status}`);
         })
         .catch((error) => {
-            console.log(`error updating user: ${error}`);
+            console.error(`error updating user: ${error}`);
         });
+};
+
+export const removeLocalStorage = () => {
+    localStorage.removeItem(Helpers.TOKEN_KEY);
+    localStorage.removeItem(Helpers.TOKEN_KEY_CREATED);
 };

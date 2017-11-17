@@ -68,6 +68,7 @@ func (ctx *Context) UsersHandler(w http.ResponseWriter, r *http.Request) {
 func (ctx *Context) UsersMeHandler(w http.ResponseWriter, r *http.Request) {
     user, err := ctx.GetAuthenticatedUser(r)
     if err != nil {
+        fmt.Printf("err: %v\n", err)
         http.Error(w, "please sign-in", http.StatusUnauthorized)
         return
     }
@@ -101,12 +102,12 @@ func (ctx *Context) UsersMeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (ctx *Context) GetAuthenticatedUser(r *http.Request) (*users.User, error) {
     sessionState := SessionState{}
-    _, err := sessions.GetSessionID(r, ctx.signingKey)
+    _, err := sessions.GetSessionID(r, ctx.SigningKey)
 
     if err != nil {
         return nil, fmt.Errorf("session id not valid: %v", err)
     }
-    _, err = sessions.GetState(r, ctx.signingKey, ctx.sessionsStore, &sessionState)
+    _, err = sessions.GetState(r, ctx.SigningKey, ctx.sessionsStore, &sessionState)
     if err != nil {
         return nil, fmt.Errorf("authenticated user not found in session store: %v", err)
     }
@@ -115,7 +116,7 @@ func (ctx *Context) GetAuthenticatedUser(r *http.Request) (*users.User, error) {
 
 func (ctx *Context) UpdateAuthenticatedUserInSessionsStore(r *http.Request, user users.User) error {
     sessionState := SessionState{}
-    sid, err := sessions.GetSessionID(r, ctx.signingKey)
+    sid, err := sessions.GetSessionID(r, ctx.SigningKey)
 
     if err != nil {
         return fmt.Errorf("session id not valid: %v", err)
@@ -155,7 +156,7 @@ func (ctx *Context) SessionsHandler(w http.ResponseWriter, r *http.Request) {
             Created: time.Now(),
             User: *user,
         }
-        _, err = sessions.BeginSession(ctx.signingKey, ctx.sessionsStore, sessionState, w)
+        _, err = sessions.BeginSession(ctx.SigningKey, ctx.sessionsStore, sessionState, w)
         if err != nil {
             http.Error(w, "password not valid", http.StatusInternalServerError)
             return
@@ -170,7 +171,7 @@ func (ctx *Context) SessionsHandler(w http.ResponseWriter, r *http.Request) {
 func (ctx *Context) SessionsMineHandler(w http.ResponseWriter, r *http.Request) {
     switch r.Method {
     case "DELETE":
-        _, err := sessions.EndSession(r, ctx.signingKey, ctx.sessionsStore)
+        _, err := sessions.EndSession(r, ctx.SigningKey, ctx.sessionsStore)
         if err != nil {
             http.Error(w, "error signing out", http.StatusUnauthorized)
             return

@@ -32,7 +32,7 @@ class Search extends React.Component {
             searchResults = this.state.foundUsers.map((item) => {
                 return (
                     <li key={item.id}>
-                        <img src={item.photourl} />
+                        <img alt={`${item.firstname} ${item.lastname}`} src={item.photourl} />
                         <span>{`${item.firstname} ${item.lastname}`}</span>
                         <span>{item.username}</span>
                         <span>{item.email}</span>

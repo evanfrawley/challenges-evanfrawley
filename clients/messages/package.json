@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "lodash": "^4.17.4",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
+    "react-materialize": "^1.0.18",
     "react-scripts": "1.0.14"
   },
   "scripts": {
@@ -15,7 +17,6 @@
     "watch-sass": "sass --watch src/styles/sass:src/styles/css"
   },
   "devDependencies": {
-    "react-materialize": "^1.0.16",
     "react-router": "^4.2.0",
     "react-router-dom": "^4.2.2",
     "whatwg-fetch": "^2.0.3"
