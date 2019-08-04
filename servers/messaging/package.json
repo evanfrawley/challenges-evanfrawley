@@ -1,0 +1,19 @@
+{
+  "name": "messaging",
+  "description": "evanfrawley's messaging docker image for INFO 344",
+  "repository": "https://github.com/info344-a17/challenges-evanfrawley.git",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "boom": "^7.1.1",
+    "koa": "^2.4.1",
+    "koa-body": "^2.5.0",
+    "koa-logger": "^3.1.0",
+    "mongodb": "^2.2.33"
+  },
+  "devDependencies": {
+    "babel-register": "^6.26.0",
+    "koa-router": "^7.3.0"
+  }
+}

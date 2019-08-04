@@ -1,4 +1,4 @@
-package handlers
+package main
 
 import (
     "io"
@@ -57,12 +57,13 @@ type PageSummary struct {
     Audio       []*PreviewAudio `json:"audio,omitempty"`
 }
 
-//SummaryHandler handles requests for the page summary API.
+//LinkSummaryHandler handles requests for the page summary API.
 //This API expects one query string parameter named `url`,
 //which should contain a URL to a web page. It responds with
 //a JSON-encoded PageSummary struct containing the page summary
 //meta-data.
-func SummaryHandler(w http.ResponseWriter, r *http.Request) {
+func LinkSummaryHandler(w http.ResponseWriter, r *http.Request) {
+
     w.Header().Add(AccessControlAllowOriginKey, AccessControlAllowOriginVal)
     w.Header().Add(ContentTypeKey, ContentTypeJSONUTF8Val)
 
@@ -113,6 +114,7 @@ func fetchHTML(pageURL string) (io.ReadCloser, error) {
 //extractSummary tokenizes the `htmlStream` and populates a PageSummary
 //struct with the page's summary meta-data.
 func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, error) {
+    fmt.Printf("getting summary\n")
     tokenizer := html.NewTokenizer(htmlStream)
 
     pageSummary := &PageSummary{}
@@ -244,7 +246,6 @@ func extractSummary(pageURL string, htmlStream io.ReadCloser) (*PageSummary, err
             }
         case "title":
             handleTitle(&t, tokenizer, pageSummary)
-        default: // Do nothing!
         }
     }
 
@@ -319,7 +320,6 @@ func handleAudioPrefixMetaData(audio *PreviewAudio, metaIDTypeVal, content strin
         audio.SecureURL = content
     case "og:audio:type":
         audio.Type = content
-    default: // Do nothing!
     }
 }
 
@@ -374,7 +374,6 @@ func handleStandardMetaTagData(pageSummary *PageSummary, tagType, tagValue, cont
                 }
                 pageSummary.Keywords = keywords
             }
-        default: // Do nothing!
         }
     case "property":
         switch tagValue {
@@ -391,8 +390,6 @@ func handleStandardMetaTagData(pageSummary *PageSummary, tagType, tagValue, cont
         case "og:description":
             pageSummary.Description = content
             seenTags["og:description"] = true
-        case "og:image": // Do nothing! case handled above
-        default: // Do nothing!
         }
     }
 }
@@ -407,25 +404,29 @@ func handlePreviewImageMetaData(image *PreviewImage, imageAttribute, content str
         image.Type = content
     case "og:image:width":
         {
-            widthInt, err := strconv.Atoi(content)
-            if err != nil {
-                return fmt.Errorf("an error occurred parsing the width: %v", err)
-            } else {
-                image.Width = widthInt
+            if len(content) != 0 {
+                widthInt, err := strconv.Atoi(content)
+                if err != nil {
+                    return fmt.Errorf("an error occurred parsing the width: %v", err)
+                } else {
+                    image.Width = widthInt
+                }
             }
         }
     case "og:image:height":
         {
-            heightInt, err := strconv.Atoi(content)
-            if err != nil {
-                return fmt.Errorf("an error occurred parsing the height: %v", err)
-            } else {
-                image.Height = heightInt
+            if len(content) != 0 {
+                heightInt, err := strconv.Atoi(content)
+                if err != nil {
+                    return fmt.Errorf("an error occurred parsing the height: %v", err)
+                } else {
+                    image.Height = heightInt
+                }
             }
+
         }
     case "og:image:alt":
         image.Alt = content
-    default: // Do nothing!
     }
 
     return nil
@@ -456,7 +457,6 @@ func handlePreviewVideoMetaData(video *PreviewVideo, attribute, content string) 
                 video.Height = heightInt
             }
         }
-    default: // Do nothing!
     }
 
     return nil

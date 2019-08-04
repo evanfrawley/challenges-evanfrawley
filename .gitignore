@@ -6,3 +6,5 @@ npm-debug.log
 fullchain.pem
 privkey.pem
 tls/
+coverage.out
+build/

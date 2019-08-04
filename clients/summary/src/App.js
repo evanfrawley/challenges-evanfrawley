@@ -16,7 +16,6 @@ class App extends Component {
 
     handleOnSubmit(e) {
         e.preventDefault();
-        console.log('event target', e.target.url.value);
         GoApiService.getSummaryResourcePromise(e.target.url.value).then((json) => {
             this.setState({summary: json})
         })
